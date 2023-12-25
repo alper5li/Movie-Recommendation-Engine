@@ -1,7 +1,7 @@
 import requests
-from showImage import show
-from counting import count
-from personal_key import API_KEY
+from engine.API.showImage import show
+from engine.API.counting import count
+from engine.API.personal_key import API_KEY
 
 movieName = input("Movie Title : ")
 count()

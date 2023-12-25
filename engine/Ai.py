@@ -113,97 +113,82 @@ class MovieAi():
             "(5)"
             self.adviceTypes.add(movie.sentence.remove())    
         
+
+def example():
+    '''
+    EXAMPLE DEMO START
+
+    '''
+    Interested_Movies = [
+        ["Adult","Crime","Family"],
+        ["Short","Sci-Fi","Romance"],
+        ["Game-Show","Comedy","Crime"],
+        ["History","Film-Noir","Drama"],
+        ["News","Fantasy","Crime"],
+    ]
+
+    NotInterested_Movies = [
+        ["Musical","Music","Family"],
+        ["Talk-Show","Documentary","News"],
+        ["Music","Reality-Tv","Romance"],
+        ["Film-Noir","History","Drama"],
+        ["Crime","Sport","Thriller"],
+    ]
+
+    namelist = [
+        "Godfather",
+        "Narnia",
+        "Game Of Thrones",
+        "Lost",
+        "Nemo"
+    ]
+
+    namelist2 = [
+        "365 Day",
+        "Harry Poter",
+        "Star Wars",
+        "Thor",
+        "Cars"
+    ]
+
+    InterestedMovies = set()
+    Not_InterestedMovies = set()
+
+    # INTERESTED 
+    for i in range(len(Interested_Movies)):
+        makeMovie = Movie(Interested_Movies[i],namelist[i],1)
+        InterestedMovies.add(makeMovie)
+
+    # NOT INTERESTED 
+    for j in range(len(NotInterested_Movies)):
+        makeMovie = Movie(NotInterested_Movies[j],namelist2[j],0)
+        Not_InterestedMovies.add(makeMovie)
+
+    Ai = MovieAi()
+
+    for movie in InterestedMovies:
+        Ai.add_knowledge(movie,1)  # 1 == interested
         
+    for movie2 in Not_InterestedMovies:
+        Ai.add_knowledge(movie2,0)  # 0 == Not interested  
         
+    # Representation 
+    for m in range(len(Ai.Movies)):
+        movies_list = list(Ai.Movies)
+        print(f"Movies = {movies_list[m].name}")
         
-        
-        
-'''
-EXAMPLE DEMO START
+    print(f"Interested = {Ai.Interested}")
+    print(f"Not Interested = {Ai.NotInterested}")
+    print(f"used Types = {Ai.usedTypes}")
+    print(f"Advice Types = {Ai.adviceTypes}")
+    print(f"knowledge = {Ai.knowledge}")
 
-'''
-        
-        
-        
-Interested_Movies = [
-    ["Adult","Crime","Family"],
-    ["Short","Sci-Fi","Romance"],
-    ["Game-Show","Comedy","Crime"],
-    ["History","Film-Noir","Drama"],
-    ["News","Fantasy","Crime"],
-]
+    for k in Ai.knowledge:
+        print(k)
 
+    print(f"I ADVICE YOU {returnType(Ai.adviceTypes)} TYPES FILMS.")
 
-NotInterested_Movies = [
-    ["Musical","Music","Family"],
-    ["Talk-Show","Documentary","News"],
-    ["Music","Reality-Tv","Romance"],
-    ["Film-Noir","History","Drama"],
-    ["Crime","Sport","Thriller"],
-]
+    '''
+    EXAMPLE DEMO END
 
-
-
-namelist = [
-    "Godfather",
-    "Narnia",
-    "Game Of Thrones",
-    "Lost",
-    "Nemo"
-]
-
-namelist2 = [
-    "365 Day",
-    "Harry Poter",
-    "Star Wars",
-    "Thor",
-    "Cars"
-]
-
-InterestedMovies = set()
-Not_InterestedMovies = set()
-
-
-# INTERESTED 
-for i in range(len(Interested_Movies)):
-    makeMovie = Movie(Interested_Movies[i],namelist[i],1)
-    InterestedMovies.add(makeMovie)
-
-# NOT INTERESTED 
-for j in range(len(NotInterested_Movies)):
-    makeMovie = Movie(NotInterested_Movies[j],namelist2[j],0)
-    Not_InterestedMovies.add(makeMovie)
-
-Ai = MovieAi()
-
-for movie in InterestedMovies:
-    Ai.add_knowledge(movie,1)  # 1 == interested
-    
-for movie3 in Not_InterestedMovies:
-    Ai.add_knowledge(movie3,0)  # 0 == Not interested  
-    
-
-
-
-# Representation 
-for m in range(len(Ai.Movies)):
-    movies_list = list(Ai.Movies)
-    print(f"Movies = {movies_list[m].name}")
-    
-print(f"Interested = {Ai.Interested}")
-print(f"Not Interested = {Ai.NotInterested}")
-print(f"used Types = {Ai.usedTypes}")
-print(f"Advice Types = {Ai.adviceTypes}")
-print(f"knowledge = {Ai.knowledge}")
-
-for k in Ai.knowledge:
-    print(k)
-
-
-print(f"I ADVICE YOU {returnType(Ai.adviceTypes)} TYPES FILMS.")
-
-
-'''
-EXAMPLE DEMO END
-
-'''
+    '''

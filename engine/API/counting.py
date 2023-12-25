@@ -1,6 +1,6 @@
 def read():
     try:
-        with open('counter.txt', 'r') as file:
+        with open('engine/API/counter.txt', 'r') as file:
             content = file.read().strip()
             if content:
                 return int(content)

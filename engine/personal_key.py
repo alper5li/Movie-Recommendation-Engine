@@ -1,4 +1,0 @@
-
-# OMDB API KEY 
-
-API_KEY = ""
