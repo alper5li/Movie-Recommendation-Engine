@@ -3,10 +3,15 @@ from Dictionary.classify import returnType
 
 
 class Movie():
-    def __init__(self,types,name,adult):
-        self.sentence = Sentence(getType(types),len(types))
+    def __init__(self,id,name,adult,year,types,rating,vote):
+        self.id = id
         self.name = name
         self.adult = adult
+        self.year = year
+        self.types = types
+        self.rating = rating
+        self.vote = vote
+        self.sentence = Sentence(getType(types),len(types))
         # Other additional informations like rating, views etc.
         
 
@@ -119,21 +124,27 @@ def example():
     EXAMPLE DEMO START
 
     '''
+            
+            
+            
     Interested_Movies = [
-        ["Adult","Crime","Family"],
-        ["Short","Sci-Fi","Romance"],
-        ["Game-Show","Comedy","Crime"],
-        ["History","Film-Noir","Drama"],
-        ["News","Fantasy","Crime"],
+        "Adult,Crime,Family",
+        "Short,Sci-Fi,Romance",
+        "Game-Show,Comedy,Crime",
+        "History,Film-Noir,Drama",
+        "News,Fantasy,Crime",
     ]
 
+
     NotInterested_Movies = [
-        ["Musical","Music","Family"],
-        ["Talk-Show","Documentary","News"],
-        ["Music","Reality-Tv","Romance"],
-        ["Film-Noir","History","Drama"],
-        ["Crime","Sport","Thriller"],
+        "Musical,Music,Family",
+        "Talk-Show,Documentary,News",
+        "Music,Reality-Tv,Romance",
+        "Film-Noir,History,Drama",
+        "Crime,Sport,Thriller",
     ]
+
+
 
     namelist = [
         "Godfather",
@@ -154,14 +165,15 @@ def example():
     InterestedMovies = set()
     Not_InterestedMovies = set()
 
+
     # INTERESTED 
     for i in range(len(Interested_Movies)):
-        makeMovie = Movie(Interested_Movies[i],namelist[i],1)
+        makeMovie = Movie(i,namelist[i],1,2022,Interested_Movies[i],9,100)
         InterestedMovies.add(makeMovie)
 
     # NOT INTERESTED 
     for j in range(len(NotInterested_Movies)):
-        makeMovie = Movie(NotInterested_Movies[j],namelist2[j],0)
+        makeMovie = Movie(i,namelist[j],0,2019,Interested_Movies[j],9,100)
         Not_InterestedMovies.add(makeMovie)
 
     Ai = MovieAi()
@@ -169,9 +181,12 @@ def example():
     for movie in InterestedMovies:
         Ai.add_knowledge(movie,1)  # 1 == interested
         
-    for movie2 in Not_InterestedMovies:
-        Ai.add_knowledge(movie2,0)  # 0 == Not interested  
+    for movie3 in Not_InterestedMovies:
+        Ai.add_knowledge(movie3,0)  # 0 == Not interested  
         
+
+
+
     # Representation 
     for m in range(len(Ai.Movies)):
         movies_list = list(Ai.Movies)

@@ -33,7 +33,8 @@ dict = [
 
 def getType(types):
     signs = set()
-    for type in types:
+    typelist = types.split(',')
+    for type in typelist:
         signs.add(findKey(type))
     return signs
         
@@ -48,10 +49,11 @@ def findKey(type):
 
 
 def returnType(types):
-    signs = set()
+    list = []
     for type in types:
-        signs.add(findValue(type))
-    return signs
+        list.append(findValue(type))
+    typeStr = ','.join(list)
+    return typeStr
 
 
 def findValue(type):

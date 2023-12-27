@@ -10,12 +10,7 @@ window = ttk.Tk()
 
 window.geometry("1600x700")
 
-'''
-widgets are added here
-'''
-
 start = Start(window)
 
-example()
 # End Window
 window.mainloop()

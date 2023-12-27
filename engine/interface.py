@@ -4,7 +4,8 @@ import requests
 from io import BytesIO
 from Ai import *
 from API.RequestAPI import ask
-
+from dataAPI import GetAllMovies
+import time
 
 
 
@@ -78,7 +79,12 @@ class Recommendation():
     
     def __init__(self,root,isAdult):
         self.root = root
-        
+        #timer
+        start_time = time.time()
+        self.AllMovies = GetAllMovies(isAdult)
+        #endtimer
+        end_time = time.time() 
+        print(f"TIME ===== {end_time-start_time}")
         self.approve = self.Approve_Image()
         self.notapprove = self.NotApprove_Image()
         
