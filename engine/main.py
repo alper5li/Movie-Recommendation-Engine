@@ -1,6 +1,6 @@
 from Ai import example
 import tkinter as ttk
-from interface import Start
+from interface import Start,Recommendation
 
 
 # Main Window
@@ -11,6 +11,5 @@ window = ttk.Tk()
 window.geometry("1600x700")
 
 start = Start(window)
-
 # End Window
 window.mainloop()

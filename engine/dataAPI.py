@@ -11,10 +11,9 @@ def GetAllMovies(checkAdult):
         movieListAll = []
         
         rowNumber = raw.shape[0]
-        for i in range(rowNumber):
+        for i in range(22):
             createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
             movieListAll.append(createMovie)
-
         return movieListAll
     
     else:
@@ -25,5 +24,4 @@ def GetAllMovies(checkAdult):
         for i in range(rowNumber):
             createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
             movieList.append(createMovie)
-
         return movieList
