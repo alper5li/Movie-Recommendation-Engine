@@ -2,9 +2,9 @@ import requests
 from API.counting import count
 from API.personal_key import API_KEY
 
-def ask(movieName):
+def ask(movieID):
     count()
-    url = f"http://www.omdbapi.com/?t={movieName}&apikey={API_KEY}&"
+    url = f"http://www.omdbapi.com/?i={movieID}&apikey={API_KEY}&"
 
     # GET isteği gönderme
     response = requests.get(url)

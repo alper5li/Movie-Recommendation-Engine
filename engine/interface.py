@@ -10,7 +10,7 @@ from tkinter.ttk import Progressbar as PB
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import random
 class Start():
     def __init__(self, root):
         self.root = root
@@ -91,41 +91,40 @@ class Age():
 
 class Recommendation():
     
-    # Gets Data From Local Dataset
-    def getData(self):
-        raw = pd.read_csv("engine\\new_data.csv", delimiter=',', encoding='utf-8', low_memory=False)
-        
-        if self.isAdult:
-            movieListAll = []
-            
-            rowNumber = raw.shape[0]
-            
-            for i in range(rowNumber):
-                self.progress_var.set((i/rowNumber) * 100)
-                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
-                movieListAll.append(createMovie)
-            return movieListAll
-        
-        else:
-            movieList = []
-            raw = raw[raw['isAdult'] == 0]
-            rowNumber = raw.shape[0]
-
-            for i in range(rowNumber):
-                self.progress_var.set((i/rowNumber) * 100)
-                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
-                movieList.append(createMovie)
-            return movieList
-        
-    # THREADING 
     def getMovies(self):
+    # THREADING 
         self.info_label["text"] = "Downloading File..."
         self.info_label.place(anchor = "center", relx = .5, rely = .2)
-        
+        self.follow["text"] = f"remaining files {0}/{0}"
+        self.follow.place(anchor = "center", relx = .5, rely = .3)
         t = threading.Thread(target=self.getData)
         t.start()
         # Start checking periodically if the thread has finished.
         self.schedule_check(t)
+        
+    # Gets Data From Local Dataset
+    def getData(self):
+        raw = pd.read_csv("engine\\new_data.csv", delimiter=',', encoding='utf-8', low_memory=False)
+        movieListAll = []
+        if self.isAdult:
+            rowNumber = raw.shape[0] # 195730
+            for i in range(rowNumber):
+                self.follow["text"] = f"remaining files {i}/{rowNumber}"
+                self.progress_var.set((i/rowNumber) * 100)
+                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
+                movieListAll.append(createMovie)
+        
+        else:
+            raw = raw[raw['isAdult'] == 0] # 195078
+            rowNumber = raw.shape[0]
+            for i in range(rowNumber):
+                self.follow["text"] = f"remaining files {i}/{rowNumber}"
+                self.progress_var.set((i/rowNumber) * 100)
+                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
+                movieListAll.append(createMovie)
+        
+        self.AllMovies = movieListAll
+        self.length = len(self.AllMovies)
         
     def schedule_check(self,task):
         self.root.after(1000, self.check_if_done, task)
@@ -140,72 +139,106 @@ class Recommendation():
             self.progress_var.set(50)
             self.schedule_check(task)
     # END THREADING         
-    
     def __init__(self,root,isAdult=21):
+        # Initialize Ai
+        self.Ai = MovieAi()
+        
         self.root = root
         self.isAdult = isAdult
         custom_font = ('Helvetica',40)
-        self.info_label = ttk.Label(foreground="red",bg="black")
+        custom_font2 = ('Helvetica',14)
+        self.info_label = ttk.Label(foreground="green",bg="black")
         self.info_label.configure(font=custom_font)
+        
+        ## following data 
+        self.follow = ttk.Label(foreground="green",bg="black")
+        self.follow.configure(font=custom_font2)
         
         ## loading bar
         self.progress_var = ttk.DoubleVar()
         self.progress = PB(self.root, variable=self.progress_var, length=600)
         self.progress.place(anchor="center", relx=0.5, rely=0.5)
 
-        
-        
-        
-        
+        self.root.title("Loading Movies")
         self.movies = self.getMovies()
 
-    def movieNames(self):
-        namelist = [ 
-            "the Godfather",
-            "finding Nemo",
-            "Avatar",
-            "Narnia",
-            "Tron"  
+    ''''''
+    # It selects starting movies at first Layer
+    def getPictures(self,movies=None):
+
+        movies = [
+            self.generateRandomMovie(),
+            self.generateRandomMovie(),
+            self.generateRandomMovie(),
+            self.generateRandomMovie(),
+            self.generateRandomMovie()
         ]
         
-        temp = [ 
-            "the Godfather",
-        ]
-        
-        return namelist
-
-    def genres(self):
-        genres =[
-            ["Adult","Crime","Family"],
-            ["Short","Sci-Fi","Romance"],
-            ["Game-Show","Comedy","Crime"],
-            ["History","Film-Noir","Drama"],
-            ["News","Fantasy","Crime"],
-            ["Musical","Music","Family"],
-            ["Talk-Show","Documentary","News"],
-            ["Music","Reality-Tv","Romance"],
-            ["Film-Noir","History","Drama"],
-            ["Crime","Sport","Thriller"],
-        ]
-
-        return genres
-
-    def getPictures(self):
         images = []
-        for movie in self.movieNames():
-            url = ask(movie)
+        
+        for index,movie in enumerate(movies):
+            try:
+                url = ask(movie.id)
+                print(f"{movie} : {url}")
+                response=requests.get(url)
+                img_data = response.content
+                # Resmi PIL ile aç
+                image = Image.open(BytesIO(img_data))
+                # Resmi PhotoImage olarak dönüştür
+                photo = ImageTk.PhotoImage(image)
+                    
+                images.append(photo)
+            except requests.exceptions.MissingSchema:
+                movie = self.Exception_getPictures(index,images)  
+            
+        self.currentMovies = movies
+        return images
+    
+    def Exception_getPictures(self,index,images):
+        newMovie = self.generateRandomMovie()
+        try:
+            url = ask(newMovie.id)
+            print(f"{newMovie} : {url}")
+            response=requests.get(url)
+            img_data = response.content
+            # Resmi PIL ile aç
+            image = Image.open(BytesIO(img_data))
+            # Resmi PhotoImage olarak dönüştür
+            photo = ImageTk.PhotoImage(image)
+                    
+            images.append(photo)
+            return newMovie
+        except requests.exceptions.MissingSchema:
+            movie = self.Exception_getPictures(index,images)   
+            return movie
+    
+    # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
+    def getPoster(self,index,movie):
+        try:
+            print(type(movie))
+            url = ask(movie.id)
             print(f"{movie} : {url}")
             response=requests.get(url)
             img_data = response.content
             # Resmi PIL ile aç
             image = Image.open(BytesIO(img_data))
-
             # Resmi PhotoImage olarak dönüştür
             photo = ImageTk.PhotoImage(image)
-            
-            images.append(photo)
-        return images
+                
+            self.images[index] = photo  
+            return self.images[index]  
+                
+        except requests.exceptions.MissingSchema:
+            self.Exception_getImage(index)  
     
+    # If Exception occurs this will execute
+    def Exception_getImage(self,index):
+        newMovie = self.generateRandomMovie()
+        self.showPoster(index,newMovie) 
+
+    ''''''       
+            
+                
     def Approve_Image(self):
         img = Image.open("engine\\Images\\approve.png")
         
@@ -221,13 +254,58 @@ class Recommendation():
         
         photo = ImageTk.PhotoImage(img)
         return photo
+    
+    # Adding Movies to Ai's knowledge
+    def add_Interested(self,movie,index):
+        self.Ai.add_knowledge(movie,1)
+        # reset the posters and movies
+        newMovie = self.generateRandomMovie() 
+        self.currentMovies[index] = newMovie
+        self.showPoster(index,newMovie)
+        print(f"Interested = {self.Ai.Interested}")
+        print(f"Not Interested = {self.Ai.NotInterested}")
+        print(f"used Types = {self.Ai.usedTypes}")
+        print(f"knowledge = {self.Ai.knowledge}")
+        print(f"Advice Types = {self.Ai.adviceTypes}")
+        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+
+        
+    def add_NotInterested(self,movie,index):
+        self.Ai.add_knowledge(movie,0)
+        # reset the posters and movies
+        
+        newMovie = self.generateRandomMovie() 
+        self.currentMovies[index] = newMovie
+        self.showPoster(index,newMovie)
+        print(f"Interested = {self.Ai.Interested}")
+        print(f"Not Interested = {self.Ai.NotInterested}")
+        print(f"used Types = {self.Ai.usedTypes}")
+        print(f"knowledge = {self.Ai.knowledge}")
+        print(f"Advice Types = {self.Ai.adviceTypes}")
+        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+
+    
+    # TEMPORARY METHOD 
+    def generateRandomMovie(self):
+        length = self.length
+        x = random.randint(0,length)
+        movie = self.AllMovies[x]
+        return movie
+        
+    
     # main widgets here
     def main(self):
+        '''
+        # Stores All Movies
+        self.AllMovies = []
+        self.length = len(self.AllMovies)
+
+        '''
+        
         # Setting Approve Icon
         self.approve = self.Approve_Image()
         # Setting Not Approve Icon
         self.notapprove = self.NotApprove_Image()
-        
         # Stores Only Current Shown Movies, It should update after every interaction
         self.currentMovies = []
         # Stores Only Current Shown Movies Pictures, It should update after every interaction
@@ -235,7 +313,6 @@ class Recommendation():
         
         
         self.labels = []
-        self.buttons = []
         
         
         self.label = ttk.Label(self.root, text=f"Are You adult : {self.isAdult}",foreground="white", background="black")        
@@ -245,28 +322,35 @@ class Recommendation():
         self.label.grid(row=0, column=0, columnspan=len(self.images), pady=5)
 
             # self.currentMovies instead self.images
-        for index,img in enumerate(self.images):
+        for index,movie in enumerate(self.currentMovies):
+            self.showPoster(index,movie)
+        
+        ## ERR 
+        self.labels.grid(pady=5)
+    
+    # showposter img almamali, movie almali
+    def showPoster(self,index,movie):
             frame = ttk.Frame(self.root,bg="black")
             frame.grid(row=1, column=index, sticky="nsew")
             
-            label = ttk.Label(frame, image=img,justify="center")
+            label = ttk.Label(frame, image=self.getPoster(index,movie),justify="center",)
             label.grid(row=0, column=0, padx=5, pady=5)
             self.labels.append(label)
             
             #INTERESTED BUTTON
-            buttonY = ttk.Button(frame,image=self.approve, width=100, height=100,background="black",  borderwidth=0,activebackground=self.root.cget("background")) # ADD  ==  command = add_knowledge(Movie)  as interested
+            buttonY = ttk.Button(frame,image=self.approve, width=100, height=100,background="black",  
+                                 borderwidth=0,activebackground=self.root.cget("background"),
+                                 command=lambda: [self.add_Interested(movie,index)]
+                                 ) 
+            
             buttonY.grid(row=1, column=0, padx=(30,2), pady=2, sticky='w')
-            self.buttons.append(buttonY)
             
             #NOT INTERESTED BUTTON
-            buttonN = ttk.Button(frame, image=self.notapprove, width=100, height=100,background="black" , borderwidth=0,activebackground=self.root.cget("background"))
+            buttonN = ttk.Button(frame, image=self.notapprove, width=100, height=100,background="black",
+                                 borderwidth=0,activebackground=self.root.cget("background"),
+                                  command=lambda: [self.add_NotInterested(movie,index)])
             buttonN.grid(row=1, column=0, padx=(2,30), pady=2, sticky='e')
-            self.buttons.append(buttonN)
             
             # Sütunların eşit oranda genişlemesi için
             self.root.grid_columnconfigure(index, weight=1)  
-            self.root.grid_rowconfigure(1, weight=1)
-            
-        ## ERR 
-        self.labels.grid(pady=5)
-        
+            self.root.grid_rowconfigure(1, weight=1)    

@@ -1,5 +1,6 @@
 from Dictionary.classify import getType
 from Dictionary.classify import returnType
+from itertools import chain, combinations
 
 
 class Movie():
@@ -109,14 +110,33 @@ class MovieAi():
         self.mark_usedTypes(movie)        
     
         "(4)"
-        if interest == 0 and any(movie.sentence.types) in self.knowledge:
-            self.knowledge.remove(movie.sentence.types)
-            "(5)"
-            self.adviceTypes.remove(movie.sentence.remove())
+        all_subsets = list(chain.from_iterable(combinations(movie.sentence.types, r) for r in range(len(movie.sentence.types) + 1)))
+        for subset in all_subsets:
+            if subset not in self.knowledge:
+                self.knowledge.append(subset)
+        "(5)"       
+        if interest == 0:
+            for _ in movie.sentence.types.copy():
+                singleType = movie.sentence.remove()
+                if singleType in self.adviceTypes:
+                    self.adviceTypes.remove(singleType)
         elif interest == 1:
-            self.knowledge.append(movie.sentence.types)
-            "(5)"
-            self.adviceTypes.add(movie.sentence.remove())    
+            for _ in movie.sentence.types.copy():
+                singleType = movie.sentence.remove()
+                if singleType not in self.adviceTypes:
+                    self.adviceTypes.add(singleType)    
+                    
+        for notint in self.NotInterested:
+            if notint in self.adviceTypes:
+                self.adviceTypes.remove(notint)
+
+        all_subsets_in_advice = set()
+        for r in range(2, 4):  # 2 ile 3 elemanlı kombinasyonları almak için
+            subsets = combinations(self.adviceTypes, r)
+            all_subsets_in_advice.update(subsets)
+
+        for subset in all_subsets_in_advice:
+            self.adviceTypes.add(subset)
         
 
 def example():
