@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+
+# It will shown Welcome Page for the user.
 class Start():
     def __init__(self, root):
         self.root = root
@@ -37,7 +39,7 @@ class Start():
         self.label2.configure(font=custom_font2)
         self.label2.place(anchor = "center", relx = .5, rely = .4)
         
-        
+# Age Class gets age as a input from user to decide User is Adult or Not    
 class Age():
     def __init__(self,root):
         self.root = root
@@ -89,14 +91,19 @@ class Age():
         self.button = ttk.Button(self.root,text="continue",command=self.getAge)
         self.button.place(anchor = "center", relx = .5, rely = .7)
 
+# The Main Recommendation Program.
 class Recommendation():
     
+    '''
+    THREADING 
+    '''
+    
+    # Set information widgets while threading and starts threading 
     def getMovies(self):
-    # THREADING 
         self.info_label["text"] = "Downloading File..."
         self.info_label.place(anchor = "center", relx = .5, rely = .2)
-        self.follow["text"] = f"remaining files {0}/{0}"
-        self.follow.place(anchor = "center", relx = .5, rely = .3)
+        self.follow_progress["text"] = f"remaining files {0}/{0}"
+        self.follow_progress.place(anchor = "center", relx = .5, rely = .45)
         t = threading.Thread(target=self.getData)
         t.start()
         # Start checking periodically if the thread has finished.
@@ -109,7 +116,7 @@ class Recommendation():
         if self.isAdult:
             rowNumber = raw.shape[0] # 195730
             for i in range(rowNumber):
-                self.follow["text"] = f"remaining files {i}/{rowNumber}"
+                self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
                 createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
                 movieListAll.append(createMovie)
@@ -118,17 +125,19 @@ class Recommendation():
             raw = raw[raw['isAdult'] == 0] # 195078
             rowNumber = raw.shape[0]
             for i in range(rowNumber):
-                self.follow["text"] = f"remaining files {i}/{rowNumber}"
+                self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
                 createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
                 movieListAll.append(createMovie)
         
         self.AllMovies = movieListAll
-        self.length = len(self.AllMovies)
-        
+        self.length = len(self.AllMovies) - 1
+   
+    # Checking Periodically if the task is ended     
     def schedule_check(self,task):
         self.root.after(1000, self.check_if_done, task)
     
+    # If task is ended, it will route to the main function. If not checks again.
     def check_if_done(self,task):
         if not task.is_alive():
             self.info_label["text"] = "File successfully downloaded!"
@@ -138,23 +147,32 @@ class Recommendation():
         else:
             self.progress_var.set(50)
             self.schedule_check(task)
-    # END THREADING         
+   
+    '''
+    END THREADING
+    '''        
+    
+    # Assignin Ai and Threading Widgets.
     def __init__(self,root,isAdult=21):
+        self.root = root
+        self.isAdult = isAdult
+        
         # Initialize Ai
         self.Ai = MovieAi()
         
-        self.root = root
-        self.isAdult = isAdult
+        # Set custom fonts
         custom_font = ('Helvetica',40)
         custom_font2 = ('Helvetica',14)
+        
+        # Set Threading Information Label
         self.info_label = ttk.Label(foreground="green",bg="black")
         self.info_label.configure(font=custom_font)
         
-        ## following data 
-        self.follow = ttk.Label(foreground="green",bg="black")
-        self.follow.configure(font=custom_font2)
+        # Set Threading Following Progress label
+        self.follow_progress = ttk.Label(foreground="green",bg="black")
+        self.follow_progress.configure(font=custom_font2)
         
-        ## loading bar
+        # Set Threading Loading Bar
         self.progress_var = ttk.DoubleVar()
         self.progress = PB(self.root, variable=self.progress_var, length=600)
         self.progress.place(anchor="center", relx=0.5, rely=0.5)
@@ -162,55 +180,12 @@ class Recommendation():
         self.root.title("Loading Movies")
         self.movies = self.getMovies()
 
-    ''''''
-    # It selects starting movies at first Layer
-    def getPictures(self,movies=None):
-
-        movies = [
-            self.generateRandomMovie(),
-            self.generateRandomMovie(),
-            self.generateRandomMovie(),
-            self.generateRandomMovie(),
-            self.generateRandomMovie()
-        ]
-        
-        images = []
-        
-        for index,movie in enumerate(movies):
-            try:
-                url = ask(movie.id)
-                print(f"{movie} : {url}")
-                response=requests.get(url)
-                img_data = response.content
-                # Resmi PIL ile aç
-                image = Image.open(BytesIO(img_data))
-                # Resmi PhotoImage olarak dönüştür
-                photo = ImageTk.PhotoImage(image)
-                    
-                images.append(photo)
-            except requests.exceptions.MissingSchema:
-                movie = self.Exception_getPictures(index,images)  
-            
-        self.currentMovies = movies
-        return images
-    
-    def Exception_getPictures(self,index,images):
-        newMovie = self.generateRandomMovie()
-        try:
-            url = ask(newMovie.id)
-            print(f"{newMovie} : {url}")
-            response=requests.get(url)
-            img_data = response.content
-            # Resmi PIL ile aç
-            image = Image.open(BytesIO(img_data))
-            # Resmi PhotoImage olarak dönüştür
-            photo = ImageTk.PhotoImage(image)
-                    
-            images.append(photo)
-            return newMovie
-        except requests.exceptions.MissingSchema:
-            movie = self.Exception_getPictures(index,images)   
-            return movie
+    # assignin random movies into self.currentMovies for startup. You can specify movie count by setting length variable
+    def assignRandomMovies(self,length=5):
+        movies = []
+        for _ in range(length):
+            movies.append(self.generateRandomMovie())
+        return movies
     
     # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
     def getPoster(self,index,movie):
@@ -229,16 +204,14 @@ class Recommendation():
             return self.images[index]  
                 
         except requests.exceptions.MissingSchema:
-            self.Exception_getImage(index)  
+            self.Exception_getPoster(index)  
     
-    # If Exception occurs this will execute
-    def Exception_getImage(self,index):
+    # If Exception occurs during getPoster, it will try to generate another movie which has an image at API database
+    def Exception_getPoster(self,index):
         newMovie = self.generateRandomMovie()
         self.showPoster(index,newMovie) 
 
-    ''''''       
-            
-                
+    # Gets Local Image for using at the [Interested] button
     def Approve_Image(self):
         img = Image.open("engine\\Images\\approve.png")
         
@@ -246,7 +219,8 @@ class Recommendation():
         
         photo = ImageTk.PhotoImage(img)
         return photo
-   
+    
+    # Gets Local Image for using at the [Not interested] button
     def NotApprove_Image(self):
         img = Image.open("engine\\Images\\notapprove.png")
         
@@ -255,21 +229,25 @@ class Recommendation():
         photo = ImageTk.PhotoImage(img)
         return photo
     
-    # Adding Movies to Ai's knowledge
+    # Outputs Current Ai information
+    def Ai_Info(self):
+        print(f"Interested = {sorted(list(self.Ai.Interested))}")
+        print(f"Not Interested = {sorted(list(self.Ai.NotInterested))}")
+        print(f"used Types = {sorted(list(self.Ai.usedTypes))}")
+        print(f"knowledge = {sorted(list(self.Ai.knowledge))}")
+        print(f"Advice Types = {sorted(list(self.Ai.adviceTypes))}")
+        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")        
+        
+    # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
         self.Ai.add_knowledge(movie,1)
         # reset the posters and movies
         newMovie = self.generateRandomMovie() 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
-        print(f"Interested = {self.Ai.Interested}")
-        print(f"Not Interested = {self.Ai.NotInterested}")
-        print(f"used Types = {self.Ai.usedTypes}")
-        print(f"knowledge = {self.Ai.knowledge}")
-        print(f"Advice Types = {self.Ai.adviceTypes}")
-        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+        self.Ai_Info()
 
-        
+    # Adding Movie into Ai's knowledge as not interested    
     def add_NotInterested(self,movie,index):
         self.Ai.add_knowledge(movie,0)
         # reset the posters and movies
@@ -277,22 +255,15 @@ class Recommendation():
         newMovie = self.generateRandomMovie() 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
-        print(f"Interested = {self.Ai.Interested}")
-        print(f"Not Interested = {self.Ai.NotInterested}")
-        print(f"used Types = {self.Ai.usedTypes}")
-        print(f"knowledge = {self.Ai.knowledge}")
-        print(f"Advice Types = {self.Ai.adviceTypes}")
-        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+        self.Ai_Info()
 
-    
-    # TEMPORARY METHOD 
+    # Gets Random Movie from AllMovies
     def generateRandomMovie(self):
         length = self.length
         x = random.randint(0,length)
         movie = self.AllMovies[x]
         return movie
         
-    
     # main widgets here
     def main(self):
         '''
@@ -306,29 +277,31 @@ class Recommendation():
         self.approve = self.Approve_Image()
         # Setting Not Approve Icon
         self.notapprove = self.NotApprove_Image()
-        # Stores Only Current Shown Movies, It should update after every interaction
-        self.currentMovies = []
+        # Stores Only Current Shown Movies, It should update after every interaction, 
+        self.currentMovies = self.assignRandomMovies(5)
         # Stores Only Current Shown Movies Pictures, It should update after every interaction
-        self.images = self.getPictures()
-        
-        
+        self.images = [
+            'poster1',
+            'poster2',
+            'poster3',
+            'poster4',
+            'poster5'
+        ]
+        # Stores Labels which holds current Images
         self.labels = []
-        
-        
+        # Represents User is either Adult Or Not.        
         self.label = ttk.Label(self.root, text=f"Are You adult : {self.isAdult}",foreground="white", background="black")        
-        self.label.grid()
-        
-        self.button = ttk.Button(self.root)
         self.label.grid(row=0, column=0, columnspan=len(self.images), pady=5)
+        #
+        #self.button = ttk.Button(self.root)
 
-            # self.currentMovies instead self.images
         for index,movie in enumerate(self.currentMovies):
             self.showPoster(index,movie)
         
         ## ERR 
         self.labels.grid(pady=5)
     
-    # showposter img almamali, movie almali
+    # Shows and Updates Poster 
     def showPoster(self,index,movie):
             frame = ttk.Frame(self.root,bg="black")
             frame.grid(row=1, column=index, sticky="nsew")

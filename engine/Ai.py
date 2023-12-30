@@ -68,6 +68,9 @@ class MovieAi():
         # Track Ai's next advice types for next question.
         self.adviceTypes = set()
         
+        # Track adviceTypes's all possible combinations. 1 to 3
+        self.advice_combinations = set()
+        
         # Tracks interested knowledge
         self.knowledge =[]
     
@@ -110,10 +113,10 @@ class MovieAi():
         self.mark_usedTypes(movie)        
     
         "(4)"
-        all_subsets = list(chain.from_iterable(combinations(movie.sentence.types, r) for r in range(len(movie.sentence.types) + 1)))
-        for subset in all_subsets:
-            if subset not in self.knowledge:
-                self.knowledge.append(subset)
+        for typ in movie.sentence.types:
+            if typ not in self.knowledge:                        
+                self.knowledge.append(typ)
+
         "(5)"       
         if interest == 0:
             for _ in movie.sentence.types.copy():
@@ -130,13 +133,10 @@ class MovieAi():
             if notint in self.adviceTypes:
                 self.adviceTypes.remove(notint)
 
-        all_subsets_in_advice = set()
-        for r in range(2, 4):  # 2 ile 3 elemanlı kombinasyonları almak için
-            subsets = combinations(self.adviceTypes, r)
-            all_subsets_in_advice.update(subsets)
 
-        for subset in all_subsets_in_advice:
-            self.adviceTypes.add(subset)
+        
+
+        
         
 
 def example():
@@ -221,7 +221,7 @@ def example():
     for k in Ai.knowledge:
         print(k)
 
-    print(f"I ADVICE YOU {returnType(Ai.adviceTypes)} TYPES FILMS.")
+    print(f"I ADVICE YOU {returnTypesList(Ai.adviceTypes)} TYPES FILMS.")
 
     '''
     EXAMPLE DEMO END

@@ -39,21 +39,23 @@ def getType(types):
     return signs
         
         
-# Eger classifylanmis bir kategori ise 0 dondurur.
+# Eger classifylanmamis bir kategori ise 0 dondurur.
 def findKey(type):
     for d in dict:
         for key,val in d.items():
             if val == type:
                 return key
-    return "0"
+    return None
 
 
 def returnType(types):
     list = []
     for type in types:
-        list.append(findValue(type))
+        if findValue(type) != None:
+            list.append(findValue(type))
     typeStr = ','.join(list)
     return typeStr
+
 
 
 def findValue(type):
