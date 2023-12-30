@@ -115,6 +115,7 @@ class Recommendation():
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] # 195730
+            rowNumber = 33
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
@@ -236,7 +237,9 @@ class Recommendation():
         print(f"used Types = {sorted(list(self.Ai.usedTypes))}")
         print(f"knowledge = {sorted(list(self.Ai.knowledge))}")
         print(f"Advice Types = {sorted(list(self.Ai.adviceTypes))}")
-        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")        
+        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+        print(f"Combinated Advice Types = {list(self.Ai.advice_combinations)}")        
+        print(f"Count of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
         
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):

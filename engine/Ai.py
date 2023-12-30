@@ -97,7 +97,7 @@ class MovieAi():
             3) mark types its been used 
             4) update [knowledge] with this knowledge
             5) update advice types
-        
+            6) update advice_combinations based on advicetypes
         '''
         
         "(1)"
@@ -128,11 +128,21 @@ class MovieAi():
                 singleType = movie.sentence.remove()
                 if singleType not in self.adviceTypes:
                     self.adviceTypes.add(singleType)    
-                    
         for notint in self.NotInterested:
             if notint in self.adviceTypes:
                 self.adviceTypes.remove(notint)
-
+        "(6)"
+        self.advice_combinations.clear()
+        comb = set()
+        
+        for r in range(1, len(self.adviceTypes) + 1):
+            comb.update(combinations(self.adviceTypes, r))
+        for c in comb:
+            if len(c) > 1:  
+                self.advice_combinations.add(tuple(c))
+            elif c:  
+                self.advice_combinations.add(c[0])
+            
 
         
 
