@@ -53,10 +53,12 @@ def returnType(types):
     for type in types:
         if findValue(type) != None:
             list.append(findValue(type))
-    typeStr = ','.join(list)
-    return typeStr
+    return list
 
-
+def returnSingleType(letter):
+    if findValue(letter) != None:
+        return findValue(letter)
+    
 
 def findValue(type):
     for d in dict:

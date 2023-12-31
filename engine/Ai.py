@@ -1,5 +1,5 @@
 from Dictionary.classify import getType
-from Dictionary.classify import returnType
+from Dictionary.classify import returnType,returnSingleType
 from itertools import chain, combinations
 
 
@@ -56,10 +56,16 @@ class MovieAi():
         # Track Movies
         self.Movies = set()
         
-        # Interested Movies
+        # Track Interested Movies
+        self.InterestedMovies = set()
+        
+        # Track Not Interested Movies 
+        self.NotInterestedMovies = set()
+        
+        # Interested Movies Types
         self.Interested = set()
         
-        # Not Interested Movies
+        # Not Interested Movies Types
         self.NotInterested = set()
         
         # Track types
@@ -105,8 +111,10 @@ class MovieAi():
         
         "(2)"
         if interest == 0:
+            self.NotInterestedMovies.add(movie)
             self.mark_notInterestedTypes(movie)
         elif interest == 1:
+            self.InterestedMovies.add(movie)
             self.mark_InterestedTypes(movie)
         
         "(3)"
@@ -135,7 +143,7 @@ class MovieAi():
         self.advice_combinations.clear()
         comb = set()
         
-        for r in range(1, len(self.adviceTypes) + 1):
+        for r in range(1, 4):
             comb.update(combinations(self.adviceTypes, r))
         for c in comb:
             if len(c) > 1:  

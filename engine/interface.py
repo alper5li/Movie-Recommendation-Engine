@@ -115,7 +115,6 @@ class Recommendation():
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] # 195730
-            rowNumber = 123
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
@@ -244,6 +243,7 @@ class Recommendation():
         print(f"Combinated Advice Types = {list(self.Ai.advice_combinations)}")        
         print(f"Count of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
         
+        
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
         self.Ai.add_knowledge(movie,1)
@@ -252,6 +252,8 @@ class Recommendation():
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
         self.Ai_Info()
+        self.count += 1
+        self.checkAdvice()
 
     # Adding Movie into Ai's knowledge as not interested    
     def add_NotInterested(self,movie,index):
@@ -262,6 +264,8 @@ class Recommendation():
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
         self.Ai_Info()
+        self.count += 1
+        self.checkAdvice()
 
     # Gets Random Movie from AllMovies
     def generateRandomMovie(self):
@@ -269,7 +273,46 @@ class Recommendation():
         x = random.randint(0,length)
         movie = self.AllMovies[x]
         return movie
-        
+   
+    # EventHandler for plot information  
+    def show_text(self,event,content):
+        self.plotInfo.configure(text=content)
+   
+    # EventHandler for plot information  
+    def hide_text(self,event):
+        self.plotInfo.configure(text="")
+   
+    # Shows and Updates Poster 
+    def showPoster(self,index,movie):
+            frame = ttk.Frame(self.root,bg="black")
+            frame.grid(row=1, column=index, sticky="nsew")
+            
+            label = ttk.Label(frame, image=self.API_Data(index,movie),justify="center",)
+            label.grid(row=0, column=0, padx=5, pady=5)
+            self.labels.append(label)
+            
+            label.bind("<Enter>", lambda event, content=self.plots[index]: self.show_text(event,content))
+            label.bind("<Leave>", lambda event , content = "": self.hide_text(event))  # Fare etiketten ayrıldığında hide_text çalışacak
+            
+            
+            #INTERESTED BUTTON
+            buttonY = ttk.Button(frame,image=self.approve, width=100, height=100,background="black",  
+                                 borderwidth=0,activebackground=self.root.cget("background"),
+                                 command=lambda: [self.add_Interested(movie,index)]
+                                 ) 
+            
+            buttonY.grid(row=1, column=0, padx=(30,2), pady=2, sticky='w')
+            
+            #NOT INTERESTED BUTTON
+            buttonN = ttk.Button(frame, image=self.notapprove, width=100, height=100,background="black",
+                                 borderwidth=0,activebackground=self.root.cget("background"),
+                                  command=lambda: [self.add_NotInterested(movie,index)])
+            buttonN.grid(row=1, column=0, padx=(2,30), pady=2, sticky='e')
+            
+            # Sütunların eşit oranda genişlemesi için
+            self.root.grid_columnconfigure(index, weight=1)  
+            self.root.grid_rowconfigure(1, weight=1)    
+            
     # main widgets here
     def main(self):
         '''
@@ -313,46 +356,157 @@ class Recommendation():
         self.plotInfo.configure(font=plotFont)
         self.plotInfo.grid(row=0, column=0, columnspan=len(self.images), pady=5)  
         
+        # Check input count. If reached expected, checkAdvice() will advice movie 
+        self.count=0
+        
         # Loop for each movie label 
         for index,movie in enumerate(self.currentMovies):
             self.showPoster(index,movie)
         ## ERR 
         self.labels.grid(pady=5)
+    
+    def checkAdvice(self):
+        if self.count >=4:
+            # forget widgets 
+            self.remove_widgets(self.root)
+            # call another page for advice 
+            Advice(self.root,self.Ai)
+
+    # Removes all root widgets 
+    def remove_widgets(self,root):
+        for widget in root.winfo_children():
+            widget.destroy()
+            
+# After Recommendation, Advice will called to show what is adviced based on choices.
+class Advice():
+    def __init__(self,root,Ai):
+        self.root = root
+        self.Ai= Ai
+        self.main()
+    
+    def bubble_sort(self,arr):
+        n = len(arr)
+        for i in range(n - 1):
+            for j in range(0, n - i - 1):
+                if len(arr[j]) < len(arr[j + 1]):
+                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
+        return arr
+    
+    "(0)"
+    def previousSelected(self):
+        i_movies = self.previous_selected_interested_movies
+        ni_movies = self.previous_selected_not_interested_movies
+        string_info = "Interested movies\n"
+        for m in i_movies:
+            string_info += m.name+"\n"
+        
+        string_info+="\n"
+        
+        string_info += "Not Interested movies\n"
+        for nm in ni_movies:
+            string_info += nm.name+"\n"
+            
+        return string_info
+        
+    "(1)"
+    def calculation(self):
+        before_sort = (list(self.Ai.advice_combinations))
+        after_sort = self.bubble_sort(before_sort)
+        for adv in after_sort:
+            adv = sorted(adv)
+        return after_sort
+
+    "(2)"
+    def create_advice_list(self):
+        advices = self.advices
+        advices_with_letter = []
+        for advice in advices:
+            "('I','Z','A')"
+            adv = []
+            for letter in advice:
+                adv.append(returnSingleType(letter))
+                
+            advice_w_l = ",".join(adv)         
+            advices_with_letter.append(advice_w_l)   
+            
+        return advices_with_letter
+            
+    "(3)"
+    def adviced_movies_list(self):
+        advices = self.create_advice_list() 
+        df = pd.read_csv('engine/new_data.csv')
+        movies = []
+        for advice in advices:
+            types = advice
+            if (types in df['genres'].values):
+                print(f"Types : {types}")
+                row = df[df['genres'] == types].iloc[0] ## burada diger olasi filmleri secebiliriz, iloc ile ilk gelen filmi aliyoruz
+                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'])
+                movies.append(advMovie)
+        self.movies = movies
+    
+    "(4)"
+    def showAdvice(self):
+        index = self.index
+        movieID = self.movies[index].id
+        
+        self.label = ttk.Label(self.root, image=self.API_Data(movieID),justify="center",)
+        self.label.place(anchor = "center", relx = .5, rely = .5)
+        
+        self.button_next = ttk.Button(self.root,text="Next",command=lambda:self.updateAdvice())
+        self.button_next.place(anchor = "center", relx = .8, rely = .8)
+
+        
+    # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
+    "(5)"
+    def API_Data(self,movieID):
+        try:
+            result = ask(movieID)
+            url = result[0]
+            Plot = result[1]
+            response=requests.get(url)
+            img_data = response.content
+            # Resmi PIL ile aç
+            image = Image.open(BytesIO(img_data))
+            # Resmi PhotoImage olarak dönüştür
+            photo = ImageTk.PhotoImage(image)
+                
+            self.image = photo  
+            self.plot.configure(text=Plot)
+            return self.image  
+                
+        except requests.exceptions.MissingSchema:
+            print("Exception Occured")
+  
+    "(6)"
+    def updateAdvice(self):
+        self.index += 1
+        self.showAdvice()     
+  
+    "MAIN"
+    def main(self):
+        self.previous_selected_interested_movies = self.Ai.InterestedMovies
+        self.previous_selected_not_interested_movies = self.Ai.NotInterestedMovies
+
+        self.previous_information = ttk.Label(text="You selected these films : ",foreground='yellow',background="black")
+        self.selected_movies = self.previousSelected()
+        self.previous_selected_movies_label = ttk.Label(text=self.selected_movies,foreground='green',background="black", wraplength=400)
+        self.previous_selected_movies_label.place(anchor='center',relx=.8,rely=.1)
+        
+        self.advices = self.calculation()
+        self.index = 0
+        self.image = None
+        
+        plotFont = ('Helvetica', 16)
+        self.plot = ttk.Label(text="this is plot",foreground='green',background="black", wraplength=500)
+        self.plot.configure(font=plotFont)
+        self.plot.place(anchor = "center", relx = .5, rely = .1)
+        
+        self.movies = []
+
+        self.adviced_movies_list()
+        self.showAdvice()
+        
+        
         
     
-    def show_text(self,event,content):
-        self.plotInfo.configure(text=content)
-        
-    def hide_text(self,event):
-        self.plotInfo.configure(text="")
-        
-    # Shows and Updates Poster 
-    def showPoster(self,index,movie):
-            frame = ttk.Frame(self.root,bg="black")
-            frame.grid(row=1, column=index, sticky="nsew")
-            
-            label = ttk.Label(frame, image=self.API_Data(index,movie),justify="center",)
-            label.grid(row=0, column=0, padx=5, pady=5)
-            self.labels.append(label)
-            
-            label.bind("<Enter>", lambda event, content=self.plots[index]: self.show_text(event,content))
-            label.bind("<Leave>", lambda event , content = "": self.hide_text(event))  # Fare etiketten ayrıldığında hide_text çalışacak
-            
-            
-            #INTERESTED BUTTON
-            buttonY = ttk.Button(frame,image=self.approve, width=100, height=100,background="black",  
-                                 borderwidth=0,activebackground=self.root.cget("background"),
-                                 command=lambda: [self.add_Interested(movie,index)]
-                                 ) 
-            
-            buttonY.grid(row=1, column=0, padx=(30,2), pady=2, sticky='w')
-            
-            #NOT INTERESTED BUTTON
-            buttonN = ttk.Button(frame, image=self.notapprove, width=100, height=100,background="black",
-                                 borderwidth=0,activebackground=self.root.cget("background"),
-                                  command=lambda: [self.add_NotInterested(movie,index)])
-            buttonN.grid(row=1, column=0, padx=(2,30), pady=2, sticky='e')
-            
-            # Sütunların eşit oranda genişlemesi için
-            self.root.grid_columnconfigure(index, weight=1)  
-            self.root.grid_rowconfigure(1, weight=1)    
