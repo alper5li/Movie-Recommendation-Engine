@@ -115,7 +115,7 @@ class Recommendation():
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] # 195730
-            rowNumber = 33
+            rowNumber = 123
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
@@ -189,10 +189,12 @@ class Recommendation():
         return movies
     
     # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
-    def getPoster(self,index,movie):
+    def API_Data(self,index,movie):
         try:
             print(type(movie))
-            url = ask(movie.id)
+            result = ask(movie.id)
+            url = result[0]
+            Plot = result[1]
             print(f"{movie} : {url}")
             response=requests.get(url)
             img_data = response.content
@@ -202,13 +204,14 @@ class Recommendation():
             photo = ImageTk.PhotoImage(image)
                 
             self.images[index] = photo  
+            self.plots[index] = Plot
             return self.images[index]  
                 
         except requests.exceptions.MissingSchema:
-            self.Exception_getPoster(index)  
+            self.Exception_API_Data(index)  
     
-    # If Exception occurs during getPoster, it will try to generate another movie which has an image at API database
-    def Exception_getPoster(self,index):
+    # If Exception occurs during API_Data, it will try to generate another movie which has an image at API database
+    def Exception_API_Data(self,index):
         newMovie = self.generateRandomMovie()
         self.showPoster(index,newMovie) 
 
@@ -290,28 +293,51 @@ class Recommendation():
             'poster4',
             'poster5'
         ]
+        # Stores Only Shown Movies Plots , It should update after every interaction
+        self.plots = [
+            '',
+            '',
+            '',
+            '',
+            ''
+        ]
         # Stores Labels which holds current Images
         self.labels = []
         # Represents User is either Adult Or Not.        
         self.label = ttk.Label(self.root, text=f"Are You adult : {self.isAdult}",foreground="white", background="black")        
         self.label.grid(row=0, column=0, columnspan=len(self.images), pady=5)
-        #
-        #self.button = ttk.Button(self.root)
-
+        
+        # Represent Plots after mousehover the movie poster
+        plotFont = ('Helvetica',12)
+        self.plotInfo =  ttk.Label(self.root, text="",foreground="green", background="black")  
+        self.plotInfo.configure(font=plotFont)
+        self.plotInfo.grid(row=0, column=0, columnspan=len(self.images), pady=5)  
+        
+        # Loop for each movie label 
         for index,movie in enumerate(self.currentMovies):
             self.showPoster(index,movie)
-        
         ## ERR 
         self.labels.grid(pady=5)
+        
     
+    def show_text(self,event,content):
+        self.plotInfo.configure(text=content)
+        
+    def hide_text(self,event):
+        self.plotInfo.configure(text="")
+        
     # Shows and Updates Poster 
     def showPoster(self,index,movie):
             frame = ttk.Frame(self.root,bg="black")
             frame.grid(row=1, column=index, sticky="nsew")
             
-            label = ttk.Label(frame, image=self.getPoster(index,movie),justify="center",)
+            label = ttk.Label(frame, image=self.API_Data(index,movie),justify="center",)
             label.grid(row=0, column=0, padx=5, pady=5)
             self.labels.append(label)
+            
+            label.bind("<Enter>", lambda event, content=self.plots[index]: self.show_text(event,content))
+            label.bind("<Leave>", lambda event , content = "": self.hide_text(event))  # Fare etiketten ayrıldığında hide_text çalışacak
+            
             
             #INTERESTED BUTTON
             buttonY = ttk.Button(frame,image=self.approve, width=100, height=100,background="black",  
