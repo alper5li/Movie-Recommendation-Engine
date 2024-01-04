@@ -4,6 +4,7 @@ import requests
 from io import BytesIO
 from Ai import *
 from API.RequestAPI import ask
+from API.Network import checkNetwork
 import time
 import threading
 from tkinter.ttk import Progressbar as PB
@@ -13,15 +14,74 @@ import matplotlib.pyplot as plt
 import random
 from tqdm import tqdm
 
+class NetworkError():
+    def __init__(self,root,url):
+        self.root = root
+        self.url = url
+        self.center_window(800,300)
+        self.root.title("Network Error")
+        self.root.configure(bg="black")
+        self.status = True
+        self.retry_count = 1
+        
+        font = ('Helvetica',24)
+        
+        self.info = ttk.Label(text="Failed to connect API server.",foreground='red',background='black',font=font)
+        self.info_request = ttk.Label(foreground='red',background='black',wraplength=600,font=font)
+        self.info_count = ttk.Label(text='1',foreground='yellow',background='black')
+        self.retry_button  = ttk.Button(text='Retry',foreground="green",bg='black',command=self.Retry)
+        
+        self.info.place(anchor = "center", relx = .5, rely = .2)
+        self.info_request.place(anchor = "center", relx = .5, rely = .5)
+        self.info_count.place(anchor = "center", relx = .5, rely = .7)
+        self.retry_button.place(anchor="center",relx=.5,rely=.8)
+        
+            
+    def Retry(self):
+        url = self.url
+        self.retry_count += 1
+        info_request,status = checkNetwork(url)
+        self.info_request.configure(text=info_request)
+        self.info_count.configure(text=self.retry_count)
+        if(status):
+            self.forgot_all()
+            self.status=False
+            Start(self.root)
+
+    def forgot_all(self):
+        self.remove_widgets(self.root)
+    
+    # Removes all root widgets 
+    def remove_widgets(self,root):
+        for widget in root.winfo_children():
+            widget.destroy()
+            
+    def center_window(self,width,height):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x_coordinate = (screen_width - width) / 2
+        y_coordinate = (screen_height - height) / 2
+        self.root.geometry(f"{width}x{height}+{int(x_coordinate)}+{int(y_coordinate)}")
+
 # It will shown Welcome Page for the user.
 class Start():
     def __init__(self, root):
         self.root = root
+        self.center_window(1600,700)
         self.root.title("Movie Recommendation Engine")
         self.root.configure(bg="black")
         self.bindReference = self.root.bind('<Return>', self.switch_to_Age_class)
         self.main()
 
+    def center_window(self,width,height):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x_coordinate = (screen_width - width) / 2
+        y_coordinate = (screen_height - height) / 2
+        self.root.geometry(f"{width}x{height}+{int(x_coordinate)}+{int(y_coordinate)}")
+        
     def switch_to_Age_class(self,event=None):
         self.label.place_forget()
         self.label2.place_forget()
@@ -112,11 +172,10 @@ class Recommendation():
         
     # Gets Data From Local Dataset
     def getData(self):
-        raw = pd.read_csv(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\new_data_withdescription_sum.csv", delimiter=',', encoding='utf-8', low_memory=False)
+        raw = pd.read_csv(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv", delimiter=',', encoding='utf-8', low_memory=False)
         movieListAll = []
         if self.isAdult:
-            rowNumber = raw.shape[0] # 195730
-            rowNumber = 50
+            rowNumber = raw.shape[0] 
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
@@ -124,7 +183,7 @@ class Recommendation():
                 movieListAll.append(createMovie)
         
         else:
-            raw = raw[raw['isAdult'] == 0] # 195078
+            raw = raw[raw['isAdult'] == 0] 
             rowNumber = raw.shape[0]
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
@@ -247,12 +306,15 @@ class Recommendation():
         print(f"Interested keywords : {self.Ai.interested_keywords}")
         print(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
         print(f"Advice Keywords : {self.Ai.keywords_knowledge}")
+        print(f"length of advice keywords : {len(self.Ai.keywords_knowledge)}")
 
-        
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
         # setting keywords of movie using its own plot
         movie.setKeywords(self.plots[index])
+        print(f"interested keywords length {len(self.plots[index])}")
+        print(f"interested keywords length {(self.plots[index])}")
+
         self.Ai.add_knowledge(movie,1)
         self.count += 1
         
@@ -330,7 +392,7 @@ class Recommendation():
             self.root.grid_columnconfigure(index, weight=1)  
             self.root.grid_rowconfigure(1, weight=1)    
             
-    # main widgets here
+    # Main widgets here
     def main(self):
         '''
         # Stores All Movies
@@ -382,8 +444,9 @@ class Recommendation():
         ## ERR 
         self.labels.grid(pady=5)
     
+    # Checks total interest count for redirecting Advice Page
     def checkAdvice(self):
-        if self.count >=4:
+        if self.count >=10:
             # forget widgets 
             self.remove_widgets(self.root)
             # call another page for advice 
@@ -396,11 +459,13 @@ class Recommendation():
             
 # After Recommendation, Advice will called to show what is adviced based on choices.
 class Advice():
+
     def __init__(self,root,Ai):
         self.root = root
         self.Ai= Ai
         self.main()
     
+    # simple bubble sort algortihm
     def bubble_sort(self,arr):
         n = len(arr)
         for i in range(n - 1):
@@ -451,7 +516,7 @@ class Advice():
     "(3)"
     def adviced_movies_list(self):
         advices = self.create_advice_list() 
-        df = pd.read_csv('engine/new_data.csv')
+        df = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
         movies = []
         for advice in advices:
             types = advice
@@ -464,25 +529,27 @@ class Advice():
     
     # OPTIONAL (3)
     def adviced_movies_list_using_keywords(self):
-        self.keywordOption = True
-        local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\new_data_withdescription_sum.csv')
+        local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
+        key_ids = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\key_ids.csv')
         words = self.Ai.keywords_knowledge
         movieID = []
-        for index,row in tqdm(local_movies.iterrows(),total=len(local_movies)):
-            movie_words =set(keywordIDs(row['description']))
-            count = 0
-            for word in words:
-                if word in movie_words:
-                    count+=1
-            if count != 0:
-                movieID.append((row['tconst'],count))
-                
+        
+        all_keywords = set(words)
+        for index,row in tqdm(key_ids.iterrows(),total=len(key_ids)):
+            # OPTIMIZASYON SORUNU
+            movie_word_ids =set(row['keyID'].split())
+
+            common_words = movie_word_ids.intersection(all_keywords)
+            
+            # Ortak kelime varsa, movieID listesine ekleyin
+            if common_words:
+                movieID.append((row['tconst'], len(common_words)))
+        
         # sort it using count 
         sorted_movies = sorted(movieID, key=lambda x: x[1],reverse=True)
         print(sorted_movies)
         movieList = []
         
-        '''   PERFORMANS SORUNU        '''
         sorted_movies_set = {movieIDs[0] for movieIDs in sorted_movies[:10]} # Setting up advice film list range : 50
 
         for movieID in sorted_movies_set:
@@ -496,10 +563,7 @@ class Advice():
     "(4)"
     def showAdvice(self):
         index = self.index
-        if self.keywordOption == True:
-            movieID = self.movies[index]
-        else:
-            movieID = self.movies[index].id
+        movieID = self.movies[index].id
         self.label = ttk.Label(self.root, image=self.API_Data(movieID),justify="center",)
         self.label.place(anchor = "center", relx = .5, rely = .5)
         

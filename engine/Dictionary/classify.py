@@ -34,7 +34,7 @@ dict = [
 
 key_dict = {}
 
-with open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\unique.json", 'r') as file:
+with open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\unique_keylist.json", 'r') as file:
         key_dict = json.load(file)
 
 
@@ -76,5 +76,4 @@ def keywordIDs(plot):
     keywords = plot.split()
 # Eşleşen anahtarları bulmak için set comprehension kullanabiliriz
     keyIDs = {key for plot_word in keywords for key, word in key_dict.items() if plot_word == word}
-    
     return keyIDs

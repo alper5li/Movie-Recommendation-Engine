@@ -1,5 +1,5 @@
 import requests
-from API.counting import count
+from API.counting import API_inf
 from API.personal_key import API_KEY
 
 def ask(movieID):
