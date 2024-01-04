@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+from tqdm import tqdm
 
 # It will shown Welcome Page for the user.
 class Start():
@@ -100,7 +101,7 @@ class Recommendation():
     
     # Set information widgets while threading and starts threading 
     def getMovies(self):
-        self.info_label["text"] = "Downloading File..."
+        self.info_label["text"] = "Loading Data ..."
         self.info_label.place(anchor = "center", relx = .5, rely = .2)
         self.follow_progress["text"] = f"remaining files {0}/{0}"
         self.follow_progress.place(anchor = "center", relx = .5, rely = .45)
@@ -111,10 +112,11 @@ class Recommendation():
         
     # Gets Data From Local Dataset
     def getData(self):
-        raw = pd.read_csv("engine\\new_data.csv", delimiter=',', encoding='utf-8', low_memory=False)
+        raw = pd.read_csv(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\new_data_withdescription_sum.csv", delimiter=',', encoding='utf-8', low_memory=False)
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] # 195730
+            rowNumber = 50
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
@@ -242,29 +244,44 @@ class Recommendation():
         print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
         print(f"Combinated Advice Types = {list(self.Ai.advice_combinations)}")        
         print(f"Count of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
-        
+        print(f"Interested keywords : {self.Ai.interested_keywords}")
+        print(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
+        print(f"Advice Keywords : {self.Ai.keywords_knowledge}")
+
         
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
+        # setting keywords of movie using its own plot
+        movie.setKeywords(self.plots[index])
         self.Ai.add_knowledge(movie,1)
-        # reset the posters and movies
+        self.count += 1
+        
+        # reset the current poster and movie
         newMovie = self.generateRandomMovie() 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
+        
+        # Prints current Ai information
         self.Ai_Info()
-        self.count += 1
+        
+        # Checks if its done, if no, generates another movie
         self.checkAdvice()
 
     # Adding Movie into Ai's knowledge as not interested    
     def add_NotInterested(self,movie,index):
+        # setting keywords of movie using its own plot
+        movie.setKeywords(self.plots[index])
         self.Ai.add_knowledge(movie,0)
-        # reset the posters and movies
-        
+        self.count += 1
+
+        # reset the current poster and movie
         newMovie = self.generateRandomMovie() 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
+        # Prints current Ai information
         self.Ai_Info()
-        self.count += 1
+        
+        # Checks if its done, if no, generates another movie
         self.checkAdvice()
 
     # Gets Random Movie from AllMovies
@@ -291,8 +308,8 @@ class Recommendation():
             label.grid(row=0, column=0, padx=5, pady=5)
             self.labels.append(label)
             
-            label.bind("<Enter>", lambda event, content=self.plots[index]: self.show_text(event,content))
-            label.bind("<Leave>", lambda event , content = "": self.hide_text(event))  # Fare etiketten ayrıldığında hide_text çalışacak
+            label.bind("<Enter>", lambda event, content=self.plots[index]: self.show_text(event,content)) # After Mouse on Hover image, show_text() will execute
+            label.bind("<Leave>", lambda event , content = "": self.hide_text(event))  # After Mouse Leave hide_text() will execute
             
             
             #INTERESTED BUTTON
@@ -445,18 +462,50 @@ class Advice():
                 movies.append(advMovie)
         self.movies = movies
     
+    # OPTIONAL (3)
+    def adviced_movies_list_using_keywords(self):
+        self.keywordOption = True
+        local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\new_data_withdescription_sum.csv')
+        words = self.Ai.keywords_knowledge
+        movieID = []
+        for index,row in tqdm(local_movies.iterrows(),total=len(local_movies)):
+            movie_words =set(keywordIDs(row['description']))
+            count = 0
+            for word in words:
+                if word in movie_words:
+                    count+=1
+            if count != 0:
+                movieID.append((row['tconst'],count))
+                
+        # sort it using count 
+        sorted_movies = sorted(movieID, key=lambda x: x[1],reverse=True)
+        print(sorted_movies)
+        movieList = []
+        
+        '''   PERFORMANS SORUNU        '''
+        sorted_movies_set = {movieIDs[0] for movieIDs in sorted_movies[:10]} # Setting up advice film list range : 50
+
+        for movieID in sorted_movies_set:
+            if movieID in local_movies['tconst'].values:
+                row = local_movies[local_movies['tconst'] == movieID].iloc[0]
+                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'])
+                movieList.append(advMovie)
+        self.movies = movieList
+        print(f"MOVIES : {self.movies}")
+        
     "(4)"
     def showAdvice(self):
         index = self.index
-        movieID = self.movies[index].id
-        
+        if self.keywordOption == True:
+            movieID = self.movies[index]
+        else:
+            movieID = self.movies[index].id
         self.label = ttk.Label(self.root, image=self.API_Data(movieID),justify="center",)
         self.label.place(anchor = "center", relx = .5, rely = .5)
         
         self.button_next = ttk.Button(self.root,text="Next",command=lambda:self.updateAdvice())
         self.button_next.place(anchor = "center", relx = .8, rely = .8)
-
-        
+    
     # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
     "(5)"
     def API_Data(self,movieID):
@@ -503,8 +552,12 @@ class Advice():
         self.plot.place(anchor = "center", relx = .5, rely = .1)
         
         self.movies = []
-
-        self.adviced_movies_list()
+        
+        "OPTINAL - YOU CAN DECIDE WHICH ALGORITHM WILL BE USED"
+        #self.adviced_movies_list()
+        self.adviced_movies_list_using_keywords()
+        
+        
         self.showAdvice()
         
         

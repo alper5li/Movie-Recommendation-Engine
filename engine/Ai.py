@@ -1,5 +1,6 @@
 from Dictionary.classify import getType
 from Dictionary.classify import returnType,returnSingleType
+from Dictionary.classify import keywordIDs
 from itertools import chain, combinations
 
 
@@ -13,8 +14,12 @@ class Movie():
         self.rating = rating
         self.vote = vote
         self.sentence = Sentence(getType(types),len(types))
-        # Other additional informations like rating, views etc.
-        
+        self.keywords = set()
+    
+    # Sets keywords set using movie plot
+    def setKeywords(self,plot):
+        self.keywords = keywordIDs(plot)
+
 
 # {A,B,C,D,F,G,H,J} 
 class Sentence():
@@ -42,7 +47,6 @@ class Sentence():
         self.count -= 1
         return self.types.pop()
         
-
 class MovieAi():
     '''
     Ai uses past knowledge and updates 
@@ -77,7 +81,16 @@ class MovieAi():
         # Track adviceTypes's all possible combinations. 1 to 3
         self.advice_combinations = set()
         
-        # Tracks interested knowledge
+        # Track only interested keywords based on movie's plot 
+        self.interested_keywords = set()
+        
+        # Track only not intersested keywords based on movie's plot 
+        self.not_interested_keywords = set()
+        
+        # Track interested keywords - not interested keywords
+        self.keywords_knowledge = set()
+        
+        # Tracks interested knowledge based on genres
         self.knowledge =[]
     
     # adds movie types to Interested set   
@@ -89,10 +102,18 @@ class MovieAi():
     def mark_notInterestedTypes(self,movie):
         for type in movie.sentence.types:
             self.NotInterested.add(type)
-            
+           
+    # adds movie types to usedTypes set
     def mark_usedTypes(self,movie):
         for type in movie.sentence.types:
             self.usedTypes.add(type)
+    
+    def mark_interested_keywords(self,movie):
+        self.interested_keywords.update(movie.keywords)
+            
+    def mark_not_interested_keywords(self,movie):
+        self.not_interested_keywords.update(movie.keywords)
+
     
     # Updates knowledge whenever gets interaction with user.  
     def add_knowledge(self,movie,interest):
@@ -100,10 +121,12 @@ class MovieAi():
         This function should :
             1) mark a movie its been used 
             2) mark interest of that movie 
-            3) mark types its been used 
-            4) update [knowledge] with this knowledge
-            5) update advice types
-            6) update advice_combinations based on advicetypes
+            3) mark keywords of that movie
+            4) mark types its been used 
+            5) update [knowledge] with this knowledge
+            6) update advice types
+            7) update advice_combinations based on advicetypes
+            8) update keywords_knowledge based on interested_keywords and not_interested_keywords
         '''
         
         "(1)"
@@ -113,19 +136,23 @@ class MovieAi():
         if interest == 0:
             self.NotInterestedMovies.add(movie)
             self.mark_notInterestedTypes(movie)
+            "(3)"
+            self.mark_not_interested_keywords(movie)
         elif interest == 1:
             self.InterestedMovies.add(movie)
             self.mark_InterestedTypes(movie)
+            "(3)"
+            self.mark_interested_keywords(movie)
         
-        "(3)"
+        "(4)"
         self.mark_usedTypes(movie)        
     
-        "(4)"
+        "(5)"
         for typ in movie.sentence.types:
             if typ not in self.knowledge:                        
                 self.knowledge.append(typ)
 
-        "(5)"       
+        "(6)"       
         if interest == 0:
             for _ in movie.sentence.types.copy():
                 singleType = movie.sentence.remove()
@@ -139,7 +166,7 @@ class MovieAi():
         for notint in self.NotInterested:
             if notint in self.adviceTypes:
                 self.adviceTypes.remove(notint)
-        "(6)"
+        "(7)"
         self.advice_combinations.clear()
         comb = set()
         
@@ -150,13 +177,10 @@ class MovieAi():
                 self.advice_combinations.add(tuple(c))
             elif c:  
                 self.advice_combinations.add(c[0])
-            
-
-        
-
+        "(8)"
+        self.keywords_knowledge = self.interested_keywords - self.not_interested_keywords
         
         
-
 def example():
     '''
     EXAMPLE DEMO START
