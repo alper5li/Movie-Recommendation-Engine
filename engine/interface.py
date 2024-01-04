@@ -14,6 +14,10 @@ import random
 from tqdm import tqdm
 
 class NetworkError():
+    '''
+    If program will face with Network Error, this class will be called.
+    '''
+    
     def __init__(self,root,url):
         self.root = root
         self.url = url
@@ -63,8 +67,10 @@ class NetworkError():
         y_coordinate = (screen_height - height) / 2
         self.root.geometry(f"{width}x{height}+{int(x_coordinate)}+{int(y_coordinate)}")
 
-# It will shown Welcome Page for the user.
 class Start():
+    '''
+    It will shown Welcome Page for the user.
+    '''
     def __init__(self, root):
         self.root = root
         self.center_window(1600,700)
@@ -99,8 +105,11 @@ class Start():
         self.label2.configure(font=custom_font2)
         self.label2.place(anchor = "center", relx = .5, rely = .4)
         
-# Age Class gets age as a input from user to decide User is Adult or Not    
 class Age():
+    '''
+    Age Class gets age as a input from user to decide User is Adult or Not 
+    '''
+    
     def __init__(self,root):
         self.root = root
         
@@ -151,11 +160,13 @@ class Age():
         self.button = ttk.Button(self.root,text="continue",command=self.getAge)
         self.button.place(anchor = "center", relx = .5, rely = .7)
 
-# The Main Recommendation Program.
 class Recommendation():
+    '''
+    The Main Recommendation Program.
+    '''
     
     '''
-    THREADING 
+    THREADING PART
     '''
     
     # Set information widgets while threading and starts threading 
@@ -209,7 +220,7 @@ class Recommendation():
             self.schedule_check(task)
    
     '''
-    END THREADING
+    END OF THREADING PART
     '''        
     
     # Assignin Ai and Threading Widgets.
@@ -357,7 +368,6 @@ class Recommendation():
             return self.generateRandomMovie() 
         else:
             movie = self.AllMovies[x]
-            print(f"AA:{movie.sentence.types}")
             self.advised_types.update(movie.sentence.types)
             return movie
    
@@ -466,8 +476,10 @@ class Recommendation():
         for widget in root.winfo_children():
             widget.destroy()
             
-# After Recommendation, Advice will called to show what is adviced based on choices.
 class Advice():
+    '''
+    After Recommendation, Advice will called to show what is adviced based on choices.
+    '''
 
     def __init__(self,root,Ai):
         self.root = root
@@ -475,7 +487,7 @@ class Advice():
         self.Ai= Ai
         self.main()
     
-    # simple bubble sort algortihm
+    "simple bubble sort algortihm"
     def bubble_sort(self,arr):
         n = len(arr)
         for i in range(n - 1):
@@ -484,7 +496,7 @@ class Advice():
                     arr[j], arr[j + 1] = arr[j + 1], arr[j]
         return arr
     
-    "(0)"
+    "(0) shows previous selected movies in the window"
     def previousSelected(self):
         i_movies = self.previous_selected_interested_movies
         ni_movies = self.previous_selected_not_interested_movies
@@ -500,7 +512,7 @@ class Advice():
             
         return string_info
         
-    "(1)"
+    "(1) sorting Ai advice combinations using bubble sort algorithm"
     def calculation(self):
         before_sort = (list(self.Ai.advice_combinations))
         after_sort = self.bubble_sort(before_sort)
@@ -508,7 +520,7 @@ class Advice():
             adv = sorted(adv)
         return after_sort
 
-    "(2)"
+    "(2) returns letter's corresponding words "
     def create_advice_list(self):
         advices = self.advices
         advices_with_letter = []
@@ -523,7 +535,7 @@ class Advice():
             
         return advices_with_letter
             
-    "(3)" # using genres to make list 
+    "(3) using genres to make list " 
     def adviced_movies_list(self):
         advices = self.create_advice_list() 
         df = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
@@ -537,7 +549,7 @@ class Advice():
                 movies.append(advMovie)
         self.movies = movies
     
-    "(3)" # using keywords to make list
+    "(3) using keywords to make list" 
     def adviced_movies_list_using_keywords(self):
         local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
         key_ids = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\key_ids.csv')
@@ -570,7 +582,7 @@ class Advice():
         self.movies = movieList
         print(f"MOVIES : {len(self.movies)}")
         
-    "(4)"
+    "(4) shows adviced movie in the window"
     def showAdvice(self):
         index = self.index
         movieID = self.movies[index].id
@@ -580,8 +592,7 @@ class Advice():
         self.button_next = ttk.Button(self.root,text="Next",command=lambda:self.updateAdvice())
         self.button_next.place(anchor = "center", relx = .8, rely = .8)
     
-    # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
-    "(5)"
+    "(5) it will return image of specified movie, assign poster into allocated memory using self.images and returns itself"
     def API_Data(self,movieID):
         try:
             result = ask(movieID)
@@ -601,12 +612,12 @@ class Advice():
         except requests.exceptions.MissingSchema:
             print("Exception Occured")
   
-    "(6)"
+    "(6) updates showAdvice to advice next movie"
     def updateAdvice(self):
         self.index += 1
         self.showAdvice()     
   
-    "MAIN"
+    "(main)"
     def main(self):
         self.previous_selected_interested_movies = self.Ai.InterestedMovies
         self.previous_selected_not_interested_movies = self.Ai.NotInterestedMovies
@@ -627,7 +638,7 @@ class Advice():
         
         self.movies = []
         
-        "OPTINAL - YOU CAN DECIDE WHICH ALGORITHM WILL BE USED"
+        "OPTIONAL - YOU CAN DECIDE WHICH ALGORITHM WILL BE USED"
         #self.adviced_movies_list()
         self.adviced_movies_list_using_keywords()
         

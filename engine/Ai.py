@@ -3,8 +3,10 @@ from Dictionary.classify import returnType,returnSingleType
 from Dictionary.classify import keywordIDs
 from itertools import chain, combinations
 
-
 class Movie():
+    '''
+    Movie class which holds Movie's all information including corresponding sentence letters
+    '''
     def __init__(self,id,name,adult,year,types,rating,vote):
         self.id = id
         self.name = name
@@ -19,7 +21,6 @@ class Movie():
     # Sets keywords set using movie plot
     def setKeywords(self,plot):
         self.keywords = keywordIDs(plot)
-
 
 # {A,B,C,D,F,G,H,J} 
 class Sentence():
@@ -39,9 +40,9 @@ class Sentence():
         ...
     
     '''
-    def __init__(self, types, count):
-        self.types = set(types)     # {A,B,C,D,F,G,H,J}  
-        self.count = count          #     8
+    def __init__(self, types, count): # eg.
+        self.types = set(types)       # {A,B,C,D,F,G,H,J}  
+        self.count = count            #       8
     
     def remove(self):
         self.count -= 1
@@ -108,13 +109,14 @@ class MovieAi():
         for type in movie.sentence.types:
             self.usedTypes.add(type)
     
+    # adds keywords to interested_keywords set
     def mark_interested_keywords(self,movie):
         self.interested_keywords.update(movie.keywords)
-
+   
+    # adds keywords to not_interested_keywords set  
     def mark_not_interested_keywords(self,movie):
         self.not_interested_keywords.update(movie.keywords)
 
-    
     # Updates knowledge whenever gets interaction with user.  
     def add_knowledge(self,movie,interest):
         '''
@@ -148,9 +150,9 @@ class MovieAi():
         self.mark_usedTypes(movie)        
     
         "(5)"
-        for typ in movie.sentence.types:
-            if typ not in self.knowledge:                        
-                self.knowledge.append(typ)
+        for types in movie.sentence.types:
+            if types not in self.knowledge:                        
+                self.knowledge.append(types)
 
         "(6)"       
         if interest == 0:
