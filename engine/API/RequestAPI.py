@@ -1,9 +1,10 @@
 import requests
+from Dictionary.printcolors import printCyan,printRed
 from API.counting import API_inf
 from API.personal_key import API_KEY
 
 def ask(movieID):
-    count()
+    API_inf()
     url = f"http://www.omdbapi.com/?i={movieID}&apikey={API_KEY}&"
     Plot = ""
     posterURL = ""
@@ -17,9 +18,12 @@ def ask(movieID):
                 posterURL = value
             if key == "Plot":
                 Plot = value
-            print(f"[{key}] : {value}")
+            if value =="N/A":
+                printRed(f"[{key}] : {value}")
+            else:
+                printCyan(f"[{key}] : {value}")
     else:
-        print("İstek başarisiz oldu. Hata kodu:", response.status_code)
+        printRed("İstek başarisiz oldu. Hata kodu:", response.status_code)
         
     return posterURL,Plot
 

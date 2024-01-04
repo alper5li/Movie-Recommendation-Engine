@@ -74,6 +74,6 @@ def findValue(type):
 # returns keyID set using plot input
 def keywordIDs(plot):
     keywords = plot.split()
-# Eşleşen anahtarları bulmak için set comprehension kullanabiliriz
+    # Eşleşen anahtarları bulmak için set comprehension kullanabiliriz
     keyIDs = {key for plot_word in keywords for key, word in key_dict.items() if plot_word == word}
     return keyIDs

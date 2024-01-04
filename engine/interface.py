@@ -3,14 +3,13 @@ from PIL import Image, ImageTk
 import requests
 from io import BytesIO
 from Ai import *
+from Dictionary.printcolors import printGreen,printBlue,printRed,printYellow
 from API.RequestAPI import ask
 from API.Network import checkNetwork
 import time
 import threading
 from tkinter.ttk import Progressbar as PB
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import random
 from tqdm import tqdm
 
@@ -277,7 +276,7 @@ class Recommendation():
 
     # Gets Local Image for using at the [Interested] button
     def Approve_Image(self):
-        img = Image.open("engine\\Images\\approve.png")
+        img = Image.open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\engine\Images\approve.png")
         
         img = img.resize((100,100))
         
@@ -286,7 +285,7 @@ class Recommendation():
     
     # Gets Local Image for using at the [Not interested] button
     def NotApprove_Image(self):
-        img = Image.open("engine\\Images\\notapprove.png")
+        img = Image.open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\engine\Images\notapprove.png")
         
         img = img.resize((100,100))
         
@@ -295,18 +294,21 @@ class Recommendation():
     
     # Outputs Current Ai information
     def Ai_Info(self):
-        print(f"Interested = {sorted(list(self.Ai.Interested))}")
-        print(f"Not Interested = {sorted(list(self.Ai.NotInterested))}")
-        print(f"used Types = {sorted(list(self.Ai.usedTypes))}")
-        print(f"knowledge = {sorted(list(self.Ai.knowledge))}")
-        print(f"Advice Types = {sorted(list(self.Ai.adviceTypes))}")
-        print(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
-        print(f"Combinated Advice Types = {list(self.Ai.advice_combinations)}")        
-        print(f"Count of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
-        print(f"Interested keywords : {self.Ai.interested_keywords}")
-        print(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
-        print(f"Advice Keywords : {self.Ai.keywords_knowledge}")
-        print(f"length of advice keywords : {len(self.Ai.keywords_knowledge)}")
+        printGreen(f"Interested = {sorted(list(self.Ai.Interested))}")
+        printRed(f"Not Interested = {sorted(list(self.Ai.NotInterested))}")
+        printYellow(f"used Types = {sorted(list(self.Ai.usedTypes))}")
+        printBlue(f"knowledge = {sorted(list(self.Ai.knowledge))}")
+        print()
+        printGreen(f"Advice Types = {sorted(list(self.Ai.adviceTypes))}")
+        printGreen(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
+        print()
+        print(f"Combinations of Adviced Types = {list(self.Ai.advice_combinations)}")        
+        printGreen(f"Length of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
+        printGreen(f"Interested keywords : {self.Ai.interested_keywords}")
+        printRed(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
+        printGreen(f"Advice Keywords : {self.Ai.keywords_knowledge}")
+        printGreen(f"length of advice keywords : {len(self.Ai.keywords_knowledge)}")
+        printYellow(f"advised types : {self.advised_types}")
 
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
@@ -350,8 +352,14 @@ class Recommendation():
     def generateRandomMovie(self):
         length = self.length
         x = random.randint(0,length)
-        movie = self.AllMovies[x]
-        return movie
+        if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types) and len(self.advised_types) < 20:
+            # Generate another movie
+            return self.generateRandomMovie() 
+        else:
+            movie = self.AllMovies[x]
+            print(f"AA:{movie.sentence.types}")
+            self.advised_types.update(movie.sentence.types)
+            return movie
    
     # EventHandler for plot information  
     def show_text(self,event,content):
@@ -401,6 +409,7 @@ class Recommendation():
 
         '''
         
+        self.advised_types = set()
         # Setting Approve Icon
         self.approve = self.Approve_Image()
         # Setting Not Approve Icon
@@ -446,7 +455,7 @@ class Recommendation():
     
     # Checks total interest count for redirecting Advice Page
     def checkAdvice(self):
-        if self.count >=10:
+        if self.count >=5:
             # forget widgets 
             self.remove_widgets(self.root)
             # call another page for advice 
@@ -462,6 +471,7 @@ class Advice():
 
     def __init__(self,root,Ai):
         self.root = root
+        self.root.title("Movie Recommendation Results")
         self.Ai= Ai
         self.main()
     
@@ -513,7 +523,7 @@ class Advice():
             
         return advices_with_letter
             
-    "(3)"
+    "(3)" # using genres to make list 
     def adviced_movies_list(self):
         advices = self.create_advice_list() 
         df = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
@@ -527,7 +537,7 @@ class Advice():
                 movies.append(advMovie)
         self.movies = movies
     
-    # OPTIONAL (3)
+    "(3)" # using keywords to make list
     def adviced_movies_list_using_keywords(self):
         local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
         key_ids = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\key_ids.csv')
@@ -558,7 +568,7 @@ class Advice():
                 advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'])
                 movieList.append(advMovie)
         self.movies = movieList
-        print(f"MOVIES : {self.movies}")
+        print(f"MOVIES : {len(self.movies)}")
         
     "(4)"
     def showAdvice(self):
