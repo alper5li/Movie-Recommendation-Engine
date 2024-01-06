@@ -3,8 +3,9 @@ from Dictionary.classify import returnType,returnSingleType
 from Helpers.gif_animation import AnimatedGIFLabel
 from tkinter.ttk import Progressbar as PB
 from API.Network import checkNetwork
-from PIL import Image, ImageTk
+import matplotlib.pyplot as plt
 from API.RequestAPI import ask
+from PIL import Image, ImageTk
 from io import BytesIO
 import tkinter as ttk
 from tqdm import tqdm
@@ -13,6 +14,12 @@ from Ai import *
 import threading
 import requests
 import random
+
+algorithm_type = 'keywords'
+
+def set_algorithm_type(algorithm):
+    algorithm_type = algorithm
+    
 
 class NetworkError():
     '''
@@ -184,13 +191,14 @@ class Recommendation():
     # Gets Data From Local Dataset
     def getData(self):
         raw = pd.read_csv(r"engine\Datasets\keywords.csv", delimiter=',', encoding='utf-8', low_memory=False)
+        keywords = pd.read_csv(r"engine\Datasets\key_ids.csv", delimiter=',', encoding='utf-8', low_memory=False)
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] 
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
-                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
+                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7],keywords.iloc[i][1])
                 movieListAll.append(createMovie)
         
         else:
@@ -199,7 +207,7 @@ class Recommendation():
             for i in range(rowNumber):
                 self.follow_progress["text"] = f"remaining files {i}/{rowNumber}"
                 self.progress_var.set((i/rowNumber) * 100)
-                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7])
+                createMovie = Movie(raw.iloc[i][0],raw.iloc[i][2],raw.iloc[i][3],raw.iloc[i][4],raw.iloc[i][5],raw.iloc[i][6],raw.iloc[i][7],keywords.iloc[i][1])
                 movieListAll.append(createMovie)
         
         self.AllMovies = movieListAll
@@ -265,17 +273,16 @@ class Recommendation():
     def assignRandomMovies(self,length=5):
         movies = []
         for _ in range(length):
-            movies.append(self.generateRandomMovie())
+            movies.append(self.generateRandomMovie(1000))
         return movies
     
     # it will return image of specified movie, assign poster into allocated memory using self.images and returns itself
     def API_Data(self,index,movie):
         try:
-            print(type(movie))
             result = ask(movie.id)
             url = result[0]
             Plot = result[1]
-            print(f"{movie} : {url}")
+            printBlue(f"{movie.name} : {url}")
             response=requests.get(url)
             img_data = response.content
             # Resmi PIL ile aç
@@ -292,7 +299,7 @@ class Recommendation():
     
     # If Exception occurs during API_Data, it will try to generate another movie which has an image at API database
     def Exception_API_Data(self,index):
-        newMovie = self.generateRandomMovie()
+        newMovie = self.generateRandomMovie(1000)
         self.showPoster(index,newMovie) 
 
     # Gets Local Image for using at the [Interested] button
@@ -315,34 +322,37 @@ class Recommendation():
     
     # Outputs Current Ai information
     def Ai_Info(self):
-        printGreen(f"Interested = {sorted(list(self.Ai.Interested))}")
-        printRed(f"Not Interested = {sorted(list(self.Ai.NotInterested))}")
-        printYellow(f"used Types = {sorted(list(self.Ai.usedTypes))}")
-        printBlue(f"knowledge = {sorted(list(self.Ai.knowledge))}")
+        print()
+        printGreen(f"Interested Types= {sorted(list(self.Ai.Interested))}")
+        printRed(f"Not Interested Types = {sorted(list(self.Ai.NotInterested))}")
+        printYellow(f"Before Used Types = {sorted(list(self.Ai.usedTypes))}")
+        printBlue(f"Ai Knowledge of Types = {sorted(list(self.Ai.knowledge))}")
         print()
         printGreen(f"Advice Types = {sorted(list(self.Ai.adviceTypes))}")
-        printGreen(f"Advice Types = {returnType(self.Ai.adviceTypes)}")
-        print()
-        print(f"Combinations of Adviced Types = {list(self.Ai.advice_combinations)}")        
+        printGreen(f"Advice Types = {returnType(sorted(list(self.Ai.adviceTypes)))}")
+        printGreen(f"Combinations of Adviced Types = {list(self.Ai.advice_combinations)}")        
         printGreen(f"Length of Combined Advice Types : [{len(self.Ai.advice_combinations)}]") 
-        printGreen(f"Interested keywords : {self.Ai.interested_keywords}")
-        printRed(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
-        printGreen(f"Advice Keywords : {self.Ai.keywords_knowledge}")
-        printGreen(f"length of advice keywords : {len(self.Ai.keywords_knowledge)}")
+        print()
+        printYellow(f"Interested keywords : {self.Ai.interested_keywords}")
+        printYellow(f"Not Interested keywords : {self.Ai.not_interested_keywords}")
+        printYellow(f"Advice Keywords : {self.Ai.keywords_knowledge}")
+        printYellow(f"length of advice keywords : {len(self.Ai.keywords_knowledge)}")
         printYellow(f"advised types : {self.advised_types}")
+        print()
 
     # Adding Movie into Ai's knowledge as interested
     def add_Interested(self,movie,index):
         # setting keywords of movie using its own plot
         movie.setKeywords(self.plots[index])
-        print(f"interested keywords length {len(self.plots[index])}")
-        print(f"interested keywords length {(self.plots[index])}")
+        
+        printYellow(f"interested keywords length {len(self.plots[index])}")
+        printYellow(f"interested keywords {','.join((self.plots[index]).split())}")
 
         self.Ai.add_knowledge(movie,1)
         self.count += 1
         
         # reset the current poster and movie
-        newMovie = self.generateRandomMovie() 
+        newMovie = self.generateRandomMovie(1000) 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
         
@@ -356,11 +366,12 @@ class Recommendation():
     def add_NotInterested(self,movie,index):
         # setting keywords of movie using its own plot
         movie.setKeywords(self.plots[index])
+        
         self.Ai.add_knowledge(movie,0)
         self.count += 1
 
         # reset the current poster and movie
-        newMovie = self.generateRandomMovie() 
+        newMovie = self.generateRandomMovie(1000) 
         self.currentMovies[index] = newMovie
         self.showPoster(index,newMovie)
         # Prints current Ai information
@@ -370,18 +381,29 @@ class Recommendation():
         self.checkAdvice()
 
     # Gets Random Movie from AllMovies
-    def generateRandomMovie(self):
-        length = self.length
-        x = random.randint(0,length)
-        if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types) and len(self.advised_types) < 15:
-            # Generate another movie
-            return self.generateRandomMovie() 
+    def generateRandomMovie(self,recursion_count):
+        if recursion_count >100:
+            length = self.length
+            x = random.randint(0,length)
+            if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types) and len(self.advised_types) < 15:
+                # Generate another movie
+                recursion_count -= 1
+                return self.generateRandomMovie(recursion_count) 
+            else:
+                movie = self.AllMovies[x]
+                self.advised_types.update(movie.sentence.types)
+                return movie
         else:
-            movie = self.AllMovies[x]
-            self.advised_types.update(movie.sentence.types)
-            return movie
-   
-    # EventHandler for plot information  
+            print(f"Generating another random movie...")
+            for x in tqdm(range(len(self.AllMovies))):
+                if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types):
+                    return x     
+            length = self.length
+            r = random.randint(0,length)
+            print(f"No disjoint movies left. Assignin random movie...")   
+            return self.AllMovies[r]
+    
+    # EventHandler for plot information   
     def show_text(self,event,content):
         self.plotInfo.configure(text=content)
    
@@ -545,13 +567,16 @@ class Advice():
     def adviced_movies_list(self):
         advices = self.create_advice_list() 
         df = pd.read_csv(r'engine\Datasets\keywords.csv')
+        key_ids = pd.read_csv(r'engine\Datasets\key_ids.csv')
+
         movies = []
         for advice in advices:
             types = advice
             if (types in df['genres'].values):
                 print(f"Types : {types}")
-                row = df[df['genres'] == types].iloc[0] ## burada diger olasi filmleri secebiliriz, iloc ile ilk gelen filmi aliyoruz
-                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'])
+                row = df[df['genres'] == types].iloc[0] # We can select other movies using iloc, not we will get first film as default.
+                keys = key_ids[key_ids['tconst']==row['tconst']].iloc[0]
+                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'],keys['keyID'])
                 movies.append(advMovie)
         self.movies = movies
     
@@ -576,19 +601,55 @@ class Advice():
         # sort it using count 
         sorted_movies = sorted(movieID, key=lambda x: x[1],reverse=True)
         print(sorted_movies)
+        
         movieList = []
         
-        sorted_movies_set = {movieIDs[0] for movieIDs in sorted_movies[:10]} # Setting up advice film list range : 50
-
+        sorted_movies_set = [movieIDs[0] for movieIDs in sorted_movies[:10]] # Setting up advice film list range : 10
+        
         for movieID in sorted_movies_set:
             if movieID in local_movies['tconst'].values:
                 row = local_movies[local_movies['tconst'] == movieID].iloc[0]
-                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'])
+                keys = key_ids[key_ids['tconst']== movieID].iloc[0]
+                advMovie = Movie(row['tconst'],row['originalTitle'],row['isAdult'],row['startYear'],row['genres'],row['averageRating'],row['numVotes'],keys['keyID'])
                 movieList.append(advMovie)
         self.movies = movieList
-        print(f"MOVIES : {len(self.movies)}")
+        print(f"MOVIES : {(self.movies)}")
+    
+    "(4)"
+    def create_graphs(self):
+        # [movies] = movies which will be advised in the next section
+        # [Ai]     = movies which were be used to select advised movies past
+        movies = self.movies
+        X = [] # assign X 
+        Y_keywords = []
+        Y_categories = []
+        Y_similarity_percentage = []
         
-    "(4) shows adviced movie in the window"
+        for movie in movies:
+            # movies names assigned to X 
+            X.append(movie.name)
+            # calculate how many categories joint with Ai knowledge, assigned to Y_categories
+            joint_categories = list(movie.sentence.types.intersection(self.Ai.adviceTypes))
+            Y_categories.append(len(joint_categories))
+            # calculate how many keywords is joint with Ai knowledge, assigned to Y_keywords
+            print(f"Keywords = {list(movie.keywords)}")
+            print(f"Knowledge = {list(self.Ai.keywords_knowledge)}")
+            joint_keywords = list(movie.keywords.intersection(self.Ai.keywords_knowledge))
+            Y_keywords.append(len(joint_keywords))
+            
+        # Graph
+        plt.plot(X,Y_keywords,label="Keyword Similarity",color='green',marker='o')
+        plt.plot(X,Y_categories,label="Categories Similarity",color='red',linestyle='--')
+
+        plt.xlabel('Advised Movies')
+        plt.ylabel('Similarities')
+        plt.title('Graph')
+        
+        plt.legend()
+        plt.show(block=False)
+        
+        
+    "(5) shows adviced movie in the window"
     def showAdvice(self):
         index = self.index
         movieID = self.movies[index].id
@@ -598,7 +659,7 @@ class Advice():
         self.button_next = ttk.Button(self.root,text="Next",command=lambda:self.updateAdvice())
         self.button_next.place(anchor = "center", relx = .8, rely = .8)
     
-    "(5) it will return image of specified movie, assign poster into allocated memory using self.images and returns itself"
+    "(6) it will return image of specified movie, assign poster into allocated memory using self.images and returns itself"
     def API_Data(self,movieID):
         try:
             result = ask(movieID)
@@ -618,13 +679,13 @@ class Advice():
         except requests.exceptions.MissingSchema:
             print("Exception Occured")
   
-    "(6) updates showAdvice to advice next movie"
+    "(7) updates showAdvice to advice next movie"
     def updateAdvice(self):
         self.index += 1
         self.showAdvice()     
   
     "(main)"
-    def main(self,algortihm_type='keywords'):
+    def main(self):
         self.previous_selected_interested_movies = self.Ai.InterestedMovies
         self.previous_selected_not_interested_movies = self.Ai.NotInterestedMovies
 
@@ -645,11 +706,13 @@ class Advice():
         self.movies = []
         
         "OPTIONAL - YOU CAN DECIDE WHICH ALGORITHM WILL BE USED"
-        if algortihm_type == 'keywords':
+        if algorithm_type == 'keywords':
             self.adviced_movies_list_using_keywords()
-        elif algortihm_type == 'genres':
+        elif algorithm_type == 'genres':
             self.adviced_movies_list()
         
+        # Now We have movies in self.movies. Lets create a graph of similarity percentage and matching keyword / mathching genres count based on films
+        self.create_graphs()
         
         self.showAdvice()
         

@@ -6,7 +6,7 @@ class Movie():
     '''
     Movie class which holds Movie's all information including corresponding sentence letters
     '''
-    def __init__(self,id,name,adult,year,types,rating,vote):
+    def __init__(self,id,name,adult,year,types,rating,vote,keywords=None):
         self.id = id
         self.name = name
         self.adult = adult
@@ -15,7 +15,7 @@ class Movie():
         self.rating = rating
         self.vote = vote
         self.sentence = Sentence(getType(types),len(types))
-        self.keywords = set()
+        self.keywords = set(keywords.split())
     
     # Sets keywords set using movie plot
     def setKeywords(self,plot):
