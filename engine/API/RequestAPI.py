@@ -8,11 +8,11 @@ def ask(movieID):
     url = f"http://www.omdbapi.com/?i={movieID}&apikey={API_KEY}&"
     Plot = ""
     posterURL = ""
-    # GET isteği gönderme
+    # GET request
     response = requests.get(url)
     if response.status_code == 200:
-        # İstek başarılıysa, veriyi alabiliriz
-        data = response.json()  # API'den gelen veriyi JSON olarak alır
+     
+        data = response.json() 
         for key,value in data.items():
             if key == "Poster":
                 posterURL = value
@@ -26,15 +26,3 @@ def ask(movieID):
         printRed("İstek başarisiz oldu. Hata kodu:", response.status_code)
         
     return posterURL,Plot
-
-def getPlot(movieID):
-    url = f"http://www.omdbapi.com/?i={movieID}&apikey={API_KEY}&"
-    Plot = ""
-    # GET isteği gönderme
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()  # API'den gelen veriyi JSON olarak alır
-        for key,value in data.items():
-            if key == "Plot":
-                Plot = value
-                return Plot

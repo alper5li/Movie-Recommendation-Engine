@@ -2,7 +2,7 @@ import tkinter as ttk
 from interface import Start,Recommendation,NetworkError
 from API.Network import checkNetwork
 url_API = "https://www.omdbapi.com"
-icon_path = r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\engine\Images\logo.ico"
+icon_path = r"engine\Images\logo.ico"
 
 def checkStatus():
     _,status = checkNetwork(url_API)

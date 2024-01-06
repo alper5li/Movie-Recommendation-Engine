@@ -34,7 +34,7 @@ dict = [
 
 key_dict = {}
 
-with open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\unique_keylist.json", 'r') as file:
+with open(r"engine\Dictionary\unique_keylist.json", 'r') as file:
         key_dict = json.load(file)
 
 

@@ -1,17 +1,18 @@
-import tkinter as ttk
-from PIL import Image, ImageTk
-import requests
-from io import BytesIO
-from Ai import *
 from Dictionary.printcolors import printGreen,printBlue,printRed,printYellow
-from API.RequestAPI import ask
-from API.Network import checkNetwork
-import time
-import threading
+from Dictionary.classify import returnType,returnSingleType
+from Helpers.gif_animation import AnimatedGIFLabel
 from tkinter.ttk import Progressbar as PB
-import pandas as pd
-import random
+from API.Network import checkNetwork
+from PIL import Image, ImageTk
+from API.RequestAPI import ask
+from io import BytesIO
+import tkinter as ttk
 from tqdm import tqdm
+import pandas as pd
+from Ai import *
+import threading
+import requests
+import random
 
 class NetworkError():
     '''
@@ -182,7 +183,7 @@ class Recommendation():
         
     # Gets Data From Local Dataset
     def getData(self):
-        raw = pd.read_csv(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv", delimiter=',', encoding='utf-8', low_memory=False)
+        raw = pd.read_csv(r"engine\Datasets\keywords.csv", delimiter=',', encoding='utf-8', low_memory=False)
         movieListAll = []
         if self.isAdult:
             rowNumber = raw.shape[0] 
@@ -211,10 +212,9 @@ class Recommendation():
     # If task is ended, it will route to the main function. If not checks again.
     def check_if_done(self,task):
         if not task.is_alive():
-            self.info_label["text"] = "File successfully downloaded!"
+            self.info_label.configure(text="File successfully downloaded!") 
             self.info_label.place_forget()
             self.main()
-
         else:
             self.progress_var.set(50)
             self.schedule_check(task)
@@ -227,6 +227,16 @@ class Recommendation():
     def __init__(self,root,isAdult=21):
         self.root = root
         self.isAdult = isAdult
+        
+        # Setting Our Loading Duck
+        duck_gif1 = r"engine\Images\duck.gif"
+        self.duck1 = AnimatedGIFLabel(self.root,duck_gif1)
+        self.duck1.place(anchor = "center", relx = .15, rely = .5)
+        
+        # Setting Our Loading Duck
+        duck_gif2 = r"engine\Images\duck_r.gif"
+        self.duck2 = AnimatedGIFLabel(self.root,duck_gif2)
+        self.duck2.place(anchor = "center", relx = .85, rely = .5)
         
         # Initialize Ai
         self.Ai = MovieAi()
@@ -287,7 +297,7 @@ class Recommendation():
 
     # Gets Local Image for using at the [Interested] button
     def Approve_Image(self):
-        img = Image.open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\engine\Images\approve.png")
+        img = Image.open(r"engine\Images\approve.png")
         
         img = img.resize((100,100))
         
@@ -296,7 +306,7 @@ class Recommendation():
     
     # Gets Local Image for using at the [Not interested] button
     def NotApprove_Image(self):
-        img = Image.open(r"C:\Users\alper\PCSC\Movie-Recommendation-Engine\engine\Images\notapprove.png")
+        img = Image.open(r"engine\Images\notapprove.png")
         
         img = img.resize((100,100))
         
@@ -363,7 +373,7 @@ class Recommendation():
     def generateRandomMovie(self):
         length = self.length
         x = random.randint(0,length)
-        if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types) and len(self.advised_types) < 20:
+        if not self.AllMovies[x].sentence.types.isdisjoint(self.advised_types) and len(self.advised_types) < 15:
             # Generate another movie
             return self.generateRandomMovie() 
         else:
@@ -418,32 +428,28 @@ class Recommendation():
         self.length = len(self.AllMovies)
 
         '''
-        
-        self.advised_types = set()
         # Setting Approve Icon
         self.approve = self.Approve_Image()
+        
         # Setting Not Approve Icon
         self.notapprove = self.NotApprove_Image()
+        
+        # Setting previously advised types set. Its updating after everyy interaction
+        self.advised_types = set()
+        
         # Stores Only Current Shown Movies, It should update after every interaction, 
         self.currentMovies = self.assignRandomMovies(5)
+        
         # Stores Only Current Shown Movies Pictures, It should update after every interaction
-        self.images = [
-            'poster1',
-            'poster2',
-            'poster3',
-            'poster4',
-            'poster5'
-        ]
+        self.images = ['poster1','poster2','poster3','poster4','poster5']
+        
         # Stores Only Shown Movies Plots , It should update after every interaction
-        self.plots = [
-            '',
-            '',
-            '',
-            '',
-            ''
-        ]
+        self.plots = ['','','','','']
+        
+        
         # Stores Labels which holds current Images
         self.labels = []
+        
         # Represents User is either Adult Or Not.        
         self.label = ttk.Label(self.root, text=f"Are You adult : {self.isAdult}",foreground="white", background="black")        
         self.label.grid(row=0, column=0, columnspan=len(self.images), pady=5)
@@ -461,7 +467,7 @@ class Recommendation():
         for index,movie in enumerate(self.currentMovies):
             self.showPoster(index,movie)
         ## ERR 
-        self.labels.grid(pady=5)
+        #self.labels.grid(pady=5)
     
     # Checks total interest count for redirecting Advice Page
     def checkAdvice(self):
@@ -538,7 +544,7 @@ class Advice():
     "(3) using genres to make list " 
     def adviced_movies_list(self):
         advices = self.create_advice_list() 
-        df = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
+        df = pd.read_csv(r'engine\Datasets\keywords.csv')
         movies = []
         for advice in advices:
             types = advice
@@ -551,8 +557,8 @@ class Advice():
     
     "(3) using keywords to make list" 
     def adviced_movies_list_using_keywords(self):
-        local_movies = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\keywords.csv')
-        key_ids = pd.read_csv(r'C:\Users\alper\PCSC\Movie-Recommendation-Engine\key_ids.csv')
+        local_movies = pd.read_csv(r'engine\Datasets\keywords.csv')
+        key_ids = pd.read_csv(r'engine\Datasets\key_ids.csv')
         words = self.Ai.keywords_knowledge
         movieID = []
         
@@ -618,7 +624,7 @@ class Advice():
         self.showAdvice()     
   
     "(main)"
-    def main(self):
+    def main(self,algortihm_type='keywords'):
         self.previous_selected_interested_movies = self.Ai.InterestedMovies
         self.previous_selected_not_interested_movies = self.Ai.NotInterestedMovies
 
@@ -639,8 +645,10 @@ class Advice():
         self.movies = []
         
         "OPTIONAL - YOU CAN DECIDE WHICH ALGORITHM WILL BE USED"
-        #self.adviced_movies_list()
-        self.adviced_movies_list_using_keywords()
+        if algortihm_type == 'keywords':
+            self.adviced_movies_list_using_keywords()
+        elif algortihm_type == 'genres':
+            self.adviced_movies_list()
         
         
         self.showAdvice()

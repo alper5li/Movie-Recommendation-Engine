@@ -1,5 +1,4 @@
 from Dictionary.classify import getType
-from Dictionary.classify import returnType,returnSingleType
 from Dictionary.classify import keywordIDs
 from itertools import chain, combinations
 
