@@ -18,6 +18,7 @@ import random
 algorithm_type = 'keywords'
 
 def set_algorithm_type(algorithm):
+    global algorithm_type
     algorithm_type = algorithm
     
 
@@ -615,7 +616,7 @@ class Advice():
         self.movies = movieList
         print(f"MOVIES : {(self.movies)}")
     
-    "(4)"
+    "(4) creating graph"
     def create_graphs(self):
         # [movies] = movies which will be advised in the next section
         # [Ai]     = movies which were be used to select advised movies past
