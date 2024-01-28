@@ -408,7 +408,7 @@ class Recommendation():
     def show_text(self,event,content):
         self.plotInfo.configure(text=content)
    
-    # EventHandler for plot information  
+    # EventHandler for plot information
     def hide_text(self,event):
         self.plotInfo.configure(text="")
    

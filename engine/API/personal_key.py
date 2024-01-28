@@ -1,4 +1,4 @@
 
 # OMDB API KEY 
 
-API_KEY = "bdc187d1"
+API_KEY = ""

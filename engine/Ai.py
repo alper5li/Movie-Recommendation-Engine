@@ -2,6 +2,7 @@ from Dictionary.classify import getType
 from Dictionary.classify import keywordIDs
 from itertools import chain, combinations
 
+# Movie Object
 class Movie():
     '''
     Movie class which holds Movie's all information including corresponding sentence letters
@@ -21,7 +22,7 @@ class Movie():
     def setKeywords(self,plot):
         self.keywords = keywordIDs(plot)
 
-# {A,B,C,D,F,G,H,J} 
+# Sentence that movie holds. e.g : {A,B,C,D,F,G,H,J} 
 class Sentence():
     """
     Logical statement about a Movie.
@@ -47,6 +48,7 @@ class Sentence():
         self.count -= 1
         return self.types.pop()
         
+# Main Ai
 class MovieAi():
     '''
     Ai uses past knowledge and updates 

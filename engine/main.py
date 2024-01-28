@@ -26,7 +26,7 @@ window.geometry("1600x700")
 
 # Setting advising algorithm type
 ' types : [keywords] , [genres] '
-set_algorithm_type('genres')
+set_algorithm_type('keywords')
 
 # Check Network
 checkNetw(window)
